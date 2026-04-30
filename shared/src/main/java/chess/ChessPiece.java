@@ -365,7 +365,7 @@ public class ChessPiece {
         for(int i = 0; i <=8; i++) {
             ChessPiece space = board.getPiece(new ChessPosition(i, col));
             if (i == row){
-                continue
+                continue;
             }
             else if (space == null){
                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, col), null));
@@ -381,7 +381,7 @@ public class ChessPiece {
         for (int j = 0; j <= 8; j++) {
             ChessPiece space = board.getPiece(new ChessPosition(row, j));
             if (j == col){
-                continue
+                continue;
             }
             else if (space == null){
                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row, j), null));
