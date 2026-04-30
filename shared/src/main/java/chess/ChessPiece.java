@@ -362,10 +362,10 @@ public class ChessPiece {
     }
     private List<ChessMove> getRookMoves (ChessBoard board, ChessPiece piece,List<ChessMove> valMoves,
                                           int row, int col) {
-        for(int i = 0; i <=8; i++) {
+        for(int i = 1; i <=8; i++) {
             ChessPiece space = board.getPiece(new ChessPosition(i, col));
             if (i == row){
-                continue;
+                continue
             }
             else if (space == null){
                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, col), null));
@@ -378,12 +378,10 @@ public class ChessPiece {
                 break;
             }
         }
-        for (int j = 0; j <= 8; j++) {
+        for (int j = 1; j <= 8; j++) {
             ChessPiece space = board.getPiece(new ChessPosition(row, j));
-            if (j == col){
-                continue;
-            }
-            else if (space == null){
+            if (j == col)
+            if (space == null){
                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row, j), null));
             }
             else if(!sameTeam(piece, space)){
