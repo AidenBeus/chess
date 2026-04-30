@@ -257,6 +257,104 @@ public class ChessPiece {
         }
         return valMoves;
     }
+    private List<ChessMove> getPawnMoves (ChessBoard board, ChessPosition myPosition,
+                                            ChessPiece piece,List<ChessMove> valMoves, int row, int col) {
+        //white
+        if (piece.getTeamColor() == ChessGame.TeamColor.WHITE) {
+            if (row == 2) {
+                ChessPiece closeSpot = board.getPiece(new ChessPosition(row + 1, col));
+                ChessPiece spot = board.getPiece(new ChessPosition(row + 2, col));
+                if (closeSpot == null && spot == null)
+                    valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 2, col), null));
+            }
+            if (row + 1 <= 8) {
+                ChessPiece spot = board.getPiece(new ChessPosition(row + 1, col));
+                if (spot == null) {
+                    if (row + 1 == 8) {
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col), PieceType.BISHOP));
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col), PieceType.KNIGHT));
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col), PieceType.QUEEN));
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col), PieceType.ROOK));
+                    } else
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col), null));
+
+                }
+                if (col - 1 >= 1) {
+                    ChessPiece diag = board.getPiece(new ChessPosition(row + 1, col - 1));
+                    if (diag != null && !sameTeam(piece, diag)) {
+                        if (row + 1 == 8) {
+                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col - 1), PieceType.BISHOP));
+                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col - 1), PieceType.KNIGHT));
+                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col - 1), PieceType.QUEEN));
+                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col - 1), PieceType.ROOK));
+                        } else
+                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col - 1), null));
+                    }
+                }
+                if (col + 1 <= 8) {
+                    ChessPiece diag = board.getPiece(new ChessPosition(row + 1, col + 1));
+                    if (diag != null && !sameTeam(piece, diag)) {
+                        if (row + 1 == 8) {
+                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col + 1), PieceType.BISHOP));
+                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col + 1), PieceType.KNIGHT));
+                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col + 1), PieceType.QUEEN));
+                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col + 1), PieceType.ROOK));
+                        } else
+                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col + 1), null));
+                    }
+                }
+            }
+        }
+        //black
+        else {
+            if (piece.getTeamColor() == ChessGame.TeamColor.BLACK) {
+                if (row == 7) {
+                    ChessPiece closeSpot = board.getPiece(new ChessPosition(row - 1, col));
+                    ChessPiece spot = board.getPiece(new ChessPosition(row - 2, col));
+                    if (closeSpot == null && spot == null)
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 2, col), null));
+                }
+                if (row - 1 >= 1) {
+                    ChessPiece spot = board.getPiece(new ChessPosition(row - 1, col));
+                    if (spot == null) {
+                        if (row - 1 == 1) {
+                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col), PieceType.BISHOP));
+                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col), PieceType.KNIGHT));
+                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col), PieceType.QUEEN));
+                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col), PieceType.ROOK));
+                        } else
+                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col), null));
+
+                    }
+                    if (col - 1 >= 1) {
+                        ChessPiece diag = board.getPiece(new ChessPosition(row - 1, col - 1));
+                        if (diag != null && !sameTeam(piece, diag)) {
+                            if (row - 1 == 1) {
+                                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col - 1), PieceType.BISHOP));
+                                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col - 1), PieceType.KNIGHT));
+                                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col - 1), PieceType.QUEEN));
+                                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col - 1), PieceType.ROOK));
+                            } else
+                                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col - 1), null));
+                        }
+                    }
+                    if (col + 1 <= 8) {
+                        ChessPiece diag = board.getPiece(new ChessPosition(row - 1, col + 1));
+                        if (diag != null && !sameTeam(piece, diag)) {
+                            if (row - 1 == 1) {
+                                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col + 1), PieceType.BISHOP));
+                                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col + 1), PieceType.KNIGHT));
+                                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col + 1), PieceType.QUEEN));
+                                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col + 1), PieceType.ROOK));
+                            } else
+                                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col + 1), null));
+                        }
+                    }
+                }
+            }
+        }
+            return valMoves;
+        }
     /**
      * Calculates all the positions a chess piece can move to
      * Does not take into account moves that are illegal due to leaving the king in
@@ -269,13 +367,14 @@ public class ChessPiece {
         List<ChessMove> valMoves = new ArrayList<>();
         int row = myPosition.getRow();
         int col = myPosition.getColumn();
-        if (piece.getPieceType() == PieceType.BISHOP) {
+        if (piece.getPieceType() == PieceType.BISHOP)
             return getBishopMoves(board, myPosition, piece, valMoves, row, col);
-        }
         if (piece.getPieceType() == PieceType.KING)
             return getKingMoves(board, myPosition, piece, valMoves, row, col);
         if (piece.getPieceType() == PieceType.KNIGHT)
             return getKnightMoves(board, myPosition, piece, valMoves, row, col);
+        if (piece.getPieceType() == PieceType.PAWN)
+            return getPawnMoves(board, myPosition, piece, valMoves, row, col);
         return null;
     }
 }
