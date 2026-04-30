@@ -362,9 +362,12 @@ public class ChessPiece {
     }
     private List<ChessMove> getRookMoves (ChessBoard board, ChessPiece piece,List<ChessMove> valMoves,
                                           int row, int col) {
-        for(int i = row - 1; i >=1; i--){
+        for(int i = 0; i <=8; i++) {
             ChessPiece space = board.getPiece(new ChessPosition(i, col));
-            if (space == null){
+            if (i == row){
+                continue
+            }
+            else if (space == null){
                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, col), null));
             }
             else if(!sameTeam(piece, space)){
@@ -375,35 +378,12 @@ public class ChessPiece {
                 break;
             }
         }
-        for(int i = row + 1; i <=8; i++) {
-            ChessPiece space = board.getPiece(new ChessPosition(i, col));
-            if (space == null){
-                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, col), null));
-            }
-            else if(!sameTeam(piece, space)){
-                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, col), null));
-                break;
-            }
-            else{
-                break;
-            }
-        }
-        for (int j = col - 1; j >= 1; j--) {
+        for (int j = 0; j <= 8; j++) {
             ChessPiece space = board.getPiece(new ChessPosition(row, j));
-            if (space == null){
-                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row, j), null));
+            if (j == col){
+                continue
             }
-            else if(!sameTeam(piece, space)){
-                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row, j), null));
-                break;
-            }
-            else{
-                break;
-            }
-        }
-        for (int j = col + 1; j <= 8; j++) {
-            ChessPiece space = board.getPiece(new ChessPosition(row, j));
-            if (space == null){
+            else if (space == null){
                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row, j), null));
             }
             else if(!sameTeam(piece, space)){
