@@ -204,6 +204,59 @@ public class ChessPiece {
         }
         return valMoves;
     }
+
+    private List<ChessMove> getKnightMoves (ChessBoard board, ChessPosition myPosition,
+                                          ChessPiece piece,List<ChessMove> valMoves, int row, int col){
+        if (row - 1 >= 1 && col - 2 >=1){
+            ChessPiece spot = board.getPiece(new ChessPosition(row - 1, col - 2));
+            if (spot == null || !sameTeam(spot, piece)){
+                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col - 2), null));
+            }
+        }
+        if (row + 1 <= 8 && col - 2 >=1){
+            ChessPiece spot = board.getPiece(new ChessPosition(row + 1, col - 2));
+            if (spot == null || !sameTeam(spot, piece)){
+                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col - 2), null));
+            }
+        }
+        if (row + 1 <= 8 && col + 2 <= 8){
+            ChessPiece spot = board.getPiece(new ChessPosition(row + 1, col + 2));
+            if (spot == null || !sameTeam(spot, piece)){
+                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col + 2), null));
+            }
+        }
+        if (row - 1 >= 1 && col + 2 <= 8){
+            ChessPiece spot = board.getPiece(new ChessPosition(row - 1, col + 2));
+            if (spot == null || !sameTeam(spot, piece)){
+                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col + 2), null));
+            }
+        }
+        if (row - 2 >= 1 && col - 1 >= 1){
+            ChessPiece spot = board.getPiece(new ChessPosition(row - 2, col - 1));
+            if (spot == null || !sameTeam(spot, piece)){
+                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 2, col - 1), null));
+            }
+        }
+        if (row + 2 <= 8 && col - 1 >= 1){
+            ChessPiece spot = board.getPiece(new ChessPosition(row + 2, col - 1));
+            if (spot == null || !sameTeam(spot, piece)){
+                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 2, col - 1), null));
+            }
+        }
+        if (row + 2 <= 8 && col + 1 <= 8){
+            ChessPiece spot = board.getPiece(new ChessPosition(row + 2, col + 1));
+            if (spot == null || !sameTeam(spot, piece)){
+                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 2, col + 1), null));
+            }
+        }
+        if (row - 2 >= 1 && col + 1 <= 8){
+            ChessPiece spot = board.getPiece(new ChessPosition(row - 2, col + 1));
+            if (spot == null || !sameTeam(spot, piece)){
+                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 2, col + 1), null));
+            }
+        }
+        return valMoves;
+    }
     /**
      * Calculates all the positions a chess piece can move to
      * Does not take into account moves that are illegal due to leaving the king in
@@ -221,6 +274,8 @@ public class ChessPiece {
         }
         if (piece.getPieceType() == PieceType.KING)
             return getKingMoves(board, myPosition, piece, valMoves, row, col);
-        return valMoves;
+        if (piece.getPieceType() == PieceType.KNIGHT)
+            return getKnightMoves(board, myPosition, piece, valMoves, row, col);
+        return null;
     }
 }
