@@ -280,28 +280,24 @@ public class ChessPiece {
                 }
                 if (col - 1 >= 1) {
                     ChessPiece diag = board.getPiece(new ChessPosition(row + 1, col - 1));
-                    if (diag != null && !sameTeam(piece, diag)) {
-                        if (row + 1 == 8) {
-                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col - 1), PieceType.BISHOP));
-                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col - 1), PieceType.KNIGHT));
-                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col - 1), PieceType.QUEEN));
-                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col - 1), PieceType.ROOK));
-                        } else{
-                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col - 1), null));
-                        }
+                    if (diag != null && !sameTeam(piece, diag) && row + 1 == 8) {
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col - 1), PieceType.BISHOP));
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col - 1), PieceType.KNIGHT));
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col - 1), PieceType.QUEEN));
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col - 1), PieceType.ROOK));
+                    } else if (diag != null && !sameTeam(piece, diag)){
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col - 1), null));
                     }
                 }
                 if (col + 1 <= 8) {
                     ChessPiece diag = board.getPiece(new ChessPosition(row + 1, col + 1));
-                    if (diag != null && !sameTeam(piece, diag)) {
-                        if (row + 1 == 8) {
-                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col + 1), PieceType.BISHOP));
-                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col + 1), PieceType.KNIGHT));
-                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col + 1), PieceType.QUEEN));
-                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col + 1), PieceType.ROOK));
-                        } else{
-                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col + 1), null));
-                        }
+                    if (diag != null && !sameTeam(piece, diag) && row + 1 == 8) {
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col + 1), PieceType.BISHOP));
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col + 1), PieceType.KNIGHT));
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col + 1), PieceType.QUEEN));
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col + 1), PieceType.ROOK));
+                    } else if (diag != null && !sameTeam(piece, diag)){
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col + 1), null));
                     }
                 }
             }
@@ -328,28 +324,24 @@ public class ChessPiece {
                 }
                 if (col - 1 >= 1) {
                     ChessPiece diag = board.getPiece(new ChessPosition(row - 1, col - 1));
-                    if (diag != null && !sameTeam(piece, diag)) {
-                        if (row - 1 == 1) {
-                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col - 1), PieceType.BISHOP));
-                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col - 1), PieceType.KNIGHT));
-                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col - 1), PieceType.QUEEN));
-                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col - 1), PieceType.ROOK));
-                        } else{
-                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col - 1), null));
-                        }
+                    if (diag != null && !sameTeam(piece, diag) && row - 1 == 1) {
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col - 1), PieceType.BISHOP));
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col - 1), PieceType.KNIGHT));
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col - 1), PieceType.QUEEN));
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col - 1), PieceType.ROOK));
+                    } else if (diag != null && !sameTeam(piece, diag)){
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col - 1), null));
                     }
                 }
                 if (col + 1 <= 8) {
                     ChessPiece diag = board.getPiece(new ChessPosition(row - 1, col + 1));
-                    if (diag != null && !sameTeam(piece, diag)) {
-                        if (row - 1 == 1) {
-                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col + 1), PieceType.BISHOP));
-                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col + 1), PieceType.KNIGHT));
-                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col + 1), PieceType.QUEEN));
-                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col + 1), PieceType.ROOK));
-                        } else{
-                            valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col + 1), null));
-                        }
+                    if (diag != null && !sameTeam(piece, diag) && row - 1 == 1) {
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col + 1), PieceType.BISHOP));
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col + 1), PieceType.KNIGHT));
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col + 1), PieceType.QUEEN));
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col + 1), PieceType.ROOK));
+                    } else if (diag != null && !sameTeam(piece, diag)){
+                        valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col + 1), null));
                     }
                 }
             }
