@@ -61,7 +61,10 @@ public class ChessPiece {
     public PieceType getPieceType() {
         return type;
     }
-
+    public boolean sameTeam(ChessPiece original, ChessPiece newSpot){
+        //if same team color, can't move in that direction
+        return newSpot.getTeamColor().equals(original.pieceColor);
+    }
     /**
      * Calculates all the positions a chess piece can move to
      * Does not take into account moves that are illegal due to leaving the king in
@@ -80,28 +83,81 @@ public class ChessPiece {
             do{ //down left
                 i--;
                 j--;
-                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, j), null));
+                if(i < 1 || j < 1){
+                    break;
+                }
+                ChessPiece spot = board.getPiece(new ChessPosition(i, j));
+                if(spot == null){
+                    valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, j), null));
+                }
+                else if (sameTeam(piece, spot)){
+                    break;
+                }
+                else{
+                    valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, j), null));
+                    break;
+                }
+
             }while(i > 1 && j > 1);
             i = row;
             j = col;
             do{ //down right
                 i--;
                 j++;
-                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, j), null));
+                if(i < 1 || j > 8){
+                    break;
+                }
+                ChessPiece spot = board.getPiece(new ChessPosition(i, j));
+                if(spot == null){
+                    valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, j), null));
+                }
+                else if (sameTeam(piece, spot)){
+                    break;
+                }
+                else{
+                    valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, j), null));
+                    break;
+                }
             }while(i > 1 && j < 8);
             i = row;
             j = col;
             do{ //up left
                 i++;
                 j--;
-                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, j), null));
+                if(i > 8 || j < 1){
+                    break;
+                }
+                ChessPiece spot = board.getPiece(new ChessPosition(i, j));
+                if(spot == null){
+                    valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, j), null));
+                }
+                else if (sameTeam(piece, spot)){
+                    break;
+                }
+                else{
+                    valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, j), null));
+                    break;
+                }
             }while(i < 8 && j > 1);
             i = row;
             j = col;
             do{ //up right
                 i++;
                 j++;
-                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, j), null));
+                if(i > 8 || j > 8){
+                    break;
+                }
+                ChessPiece spot = board.getPiece(new ChessPosition(i, j));
+                if(spot == null){
+                    valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, j), null));
+                }
+                else if (sameTeam(piece, spot)){
+                    break;
+                }
+                else{
+                    valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, j), null));
+                    break;
+                }
             }while(i < 8 && j < 8);
         }
         return valMoves;
