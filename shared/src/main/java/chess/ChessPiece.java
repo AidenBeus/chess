@@ -375,13 +375,13 @@ public class ChessPiece {
                 break;
             }
         }
-        for(int i = row + 1; i <=8; i++) {
-            ChessPiece space = board.getPiece(new ChessPosition(i, col));
+        for(int k = row + 1; k <=8; k++) {
+            ChessPiece space = board.getPiece(new ChessPosition(k, col));
             if (space == null){
-                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, col), null));
+                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(k, col), null));
             }
             else if(!sameTeam(piece, space)){
-                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, col), null));
+                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(k, col), null));
                 break;
             }
             else{
@@ -401,13 +401,13 @@ public class ChessPiece {
                 break;
             }
         }
-        for (int j = col + 1; j <= 8; j++) {
-            ChessPiece space = board.getPiece(new ChessPosition(row, j));
+        for (int c = col + 1; c <= 8; c++) {
+            ChessPiece space = board.getPiece(new ChessPosition(row, c));
             if (space == null){
-                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row, j), null));
+                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row, c), null));
             }
             else if(!sameTeam(piece, space)){
-                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row, j), null));
+                valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row, c), null));
                 break;
             }
             else{
