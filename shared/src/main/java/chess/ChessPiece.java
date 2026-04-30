@@ -152,20 +152,20 @@ public class ChessPiece {
     }
     private List<ChessMove> getKingMoves (ChessBoard board, ChessPosition myPosition,
                                            ChessPiece piece,List<ChessMove> valMoves, int row, int col){
-        if (row - 1 >= 1 && col >= 1) {
+        if (row - 1 >= 1 && col - 1 >= 1) {
             ChessPiece spot = board.getPiece(new ChessPosition(row - 1, col - 1)); //below to the left
                 if (spot == null || !sameTeam(spot, piece)) {
                     valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col - 1), null));
                 }
         }
-        if (row >= 1 && col>=1) {
+        if (row >= 1 && col-1>=1) {
             ChessPiece spot = board.getPiece(new ChessPosition(row, col - 1));
             //same row , col to the left
             if (spot == null || !sameTeam(spot, piece)) {
                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row, col - 1), null));
             }
         }
-        if (row <=8 && col>=1) {
+        if (row <=8 && col - 1>=1) {
             ChessPiece spot = board.getPiece(new ChessPosition(row, col - 1));
             //up to the left
             if (spot == null || !sameTeam(spot, piece)) {
