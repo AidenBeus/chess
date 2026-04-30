@@ -257,8 +257,7 @@ public class ChessPiece {
         }
         return valMoves;
     }
-    private List<ChessMove> getPawnMoves (ChessBoard board, ChessPosition myPosition,
-                                            ChessPiece piece,List<ChessMove> valMoves, int row, int col) {
+    private List<ChessMove> getPawnMoves (ChessBoard board, ChessPiece piece,List<ChessMove> valMoves, int row, int col) {
         //white
         if (piece.getTeamColor() == ChessGame.TeamColor.WHITE) {
             if (row == 2) {
@@ -450,7 +449,7 @@ public class ChessPiece {
             return getKnightMoves(board, myPosition, piece, valMoves, row, col);
         }
         if (piece.getPieceType() == PieceType.PAWN){
-            return getPawnMoves(board, myPosition, piece, valMoves, row, col);
+            return getPawnMoves(board, piece, valMoves, row, col);
         }
         if (piece.getPieceType() == PieceType.QUEEN){
             return getQueenMoves(board,piece, valMoves, row, col);
