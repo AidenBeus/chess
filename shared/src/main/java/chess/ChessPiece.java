@@ -65,7 +65,7 @@ public class ChessPiece {
         //if same team color, can't move in that direction
         return newSpot.getTeamColor().equals(original.pieceColor);
     }
-    private List<ChessMove> getBishopMoves (ChessBoard board, ChessPosition myPosition,
+    private List<ChessMove> getBishopMoves (ChessBoard board,
                                            ChessPiece piece,List<ChessMove> valMoves, int row, int col){
         int i = row;
         int j = col;
@@ -355,13 +355,18 @@ public class ChessPiece {
         }
             return valMoves;
         }
-    private List<ChessMove> getQueenMoves (ChessBoard board, ChessPosition myPosition,
+    private List<ChessMove> getQueenMoves (ChessBoard board,
                                           ChessPiece piece,List<ChessMove> valMoves, int row, int col) {
-
-        return valMoves;
+        List<ChessMove> valMoves1 = getRookMoves(board, piece, valMoves, row, col);
+        List<ChessMove> valMoves2 = getBishopMoves(board, piece, valMoves, row, col);
+        for (ChessMove temp : valMoves2) {
+            if (!valMoves1.contains(temp))
+                valMoves1.add(temp);
+        }
+        return valMoves1;
     }
-    private List<ChessMove> getRookMoves (ChessBoard board, ChessPosition myPosition,
-                                          ChessPiece piece,List<ChessMove> valMoves, int row, int col) {
+    private List<ChessMove> getRookMoves (ChessBoard board, ChessPiece piece,List<ChessMove> valMoves,
+                                          int row, int col) {
         for(int i = row - 1; i >=1; i--){
             ChessPiece space = board.getPiece(new ChessPosition(i, col));
             if (space == null)
@@ -421,7 +426,7 @@ public class ChessPiece {
         int row = myPosition.getRow();
         int col = myPosition.getColumn();
         if (piece.getPieceType() == PieceType.BISHOP)
-            return getBishopMoves(board, myPosition, piece, valMoves, row, col);
+            return getBishopMoves(board, piece, valMoves, row, col);
         if (piece.getPieceType() == PieceType.KING)
             return getKingMoves(board, myPosition, piece, valMoves, row, col);
         if (piece.getPieceType() == PieceType.KNIGHT)
@@ -429,9 +434,9 @@ public class ChessPiece {
         if (piece.getPieceType() == PieceType.PAWN)
             return getPawnMoves(board, myPosition, piece, valMoves, row, col);
         if (piece.getPieceType() == PieceType.QUEEN)
-            return getQueenMoves(board, myPosition, piece, valMoves, row, col);
+            return getQueenMoves(board,piece, valMoves, row, col);
         if (piece.getPieceType() == PieceType.ROOK)
-            return getRookMoves(board, myPosition, piece, valMoves, row, col);
+            return getRookMoves(board,piece, valMoves, row, col);
         return null;
     }
 }
