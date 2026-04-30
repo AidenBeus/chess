@@ -264,8 +264,9 @@ public class ChessPiece {
             if (row == 2) {
                 ChessPiece closeSpot = board.getPiece(new ChessPosition(row + 1, col));
                 ChessPiece spot = board.getPiece(new ChessPosition(row + 2, col));
-                if (closeSpot == null && spot == null)
+                if (closeSpot == null && spot == null){
                     valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 2, col), null));
+                }
             }
             if (row + 1 <= 8) {
                 ChessPiece spot = board.getPiece(new ChessPosition(row + 1, col));
@@ -275,9 +276,9 @@ public class ChessPiece {
                         valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col), PieceType.KNIGHT));
                         valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col), PieceType.QUEEN));
                         valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col), PieceType.ROOK));
-                    } else
+                    } else{
                         valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col), null));
-
+                    }
                 }
                 if (col - 1 >= 1) {
                     ChessPiece diag = board.getPiece(new ChessPosition(row + 1, col - 1));
@@ -287,8 +288,9 @@ public class ChessPiece {
                             valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col - 1), PieceType.KNIGHT));
                             valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col - 1), PieceType.QUEEN));
                             valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col - 1), PieceType.ROOK));
-                        } else
+                        } else{
                             valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col - 1), null));
+                        }
                     }
                 }
                 if (col + 1 <= 8) {
@@ -299,8 +301,9 @@ public class ChessPiece {
                             valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col + 1), PieceType.KNIGHT));
                             valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col + 1), PieceType.QUEEN));
                             valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col + 1), PieceType.ROOK));
-                        } else
+                        } else{
                             valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row + 1, col + 1), null));
+                        }
                     }
                 }
             }
@@ -311,8 +314,9 @@ public class ChessPiece {
                 if (row == 7) {
                     ChessPiece closeSpot = board.getPiece(new ChessPosition(row - 1, col));
                     ChessPiece spot = board.getPiece(new ChessPosition(row - 2, col));
-                    if (closeSpot == null && spot == null)
+                    if (closeSpot == null && spot == null){
                         valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 2, col), null));
+                    }
                 }
                 if (row - 1 >= 1) {
                     ChessPiece spot = board.getPiece(new ChessPosition(row - 1, col));
@@ -322,9 +326,9 @@ public class ChessPiece {
                             valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col), PieceType.KNIGHT));
                             valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col), PieceType.QUEEN));
                             valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col), PieceType.ROOK));
-                        } else
+                        } else{
                             valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col), null));
-
+                        }
                     }
                     if (col - 1 >= 1) {
                         ChessPiece diag = board.getPiece(new ChessPosition(row - 1, col - 1));
@@ -334,8 +338,9 @@ public class ChessPiece {
                                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col - 1), PieceType.KNIGHT));
                                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col - 1), PieceType.QUEEN));
                                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col - 1), PieceType.ROOK));
-                            } else
+                            } else{
                                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col - 1), null));
+                            }
                         }
                     }
                     if (col + 1 <= 8) {
@@ -346,8 +351,9 @@ public class ChessPiece {
                                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col + 1), PieceType.KNIGHT));
                                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col + 1), PieceType.QUEEN));
                                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col + 1), PieceType.ROOK));
-                            } else
+                            } else{
                                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row - 1, col + 1), null));
+                            }
                         }
                     }
                 }
@@ -360,8 +366,9 @@ public class ChessPiece {
         List<ChessMove> valMoves1 = getRookMoves(board, piece, valMoves, row, col);
         List<ChessMove> valMoves2 = getBishopMoves(board, piece, valMoves, row, col);
         for (ChessMove temp : valMoves2) {
-            if (!valMoves1.contains(temp))
+            if (!valMoves1.contains(temp)){
                 valMoves1.add(temp);
+            }
         }
         return valMoves1;
     }
@@ -369,47 +376,55 @@ public class ChessPiece {
                                           int row, int col) {
         for(int i = row - 1; i >=1; i--){
             ChessPiece space = board.getPiece(new ChessPosition(i, col));
-            if (space == null)
+            if (space == null){
                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, col), null));
+            }
             else if(!sameTeam(piece, space)){
                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, col), null));
                 break;
             }
-            else
+            else{
                 break;
+            }
         }
         for(int i = row + 1; i <=8; i++) {
             ChessPiece space = board.getPiece(new ChessPosition(i, col));
-            if (space == null)
+            if (space == null){
                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, col), null));
+            }
             else if(!sameTeam(piece, space)){
                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(i, col), null));
                 break;
             }
-            else
+            else{
                 break;
+            }
         }
         for (int j = col - 1; j >= 1; j--) {
             ChessPiece space = board.getPiece(new ChessPosition(row, j));
-            if (space == null)
+            if (space == null){
                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row, j), null));
+            }
             else if(!sameTeam(piece, space)){
                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row, j), null));
                 break;
             }
-            else
+            else{
                 break;
+            }
         }
         for (int j = col + 1; j <= 8; j++) {
             ChessPiece space = board.getPiece(new ChessPosition(row, j));
-            if (space == null)
+            if (space == null){
                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row, j), null));
+            }
             else if(!sameTeam(piece, space)){
                 valMoves.add(new ChessMove(new ChessPosition(row, col), new ChessPosition(row, j), null));
                 break;
             }
-            else
+            else{
                 break;
+            }
         }
         return valMoves;
     }
@@ -425,18 +440,24 @@ public class ChessPiece {
         List<ChessMove> valMoves = new ArrayList<>();
         int row = myPosition.getRow();
         int col = myPosition.getColumn();
-        if (piece.getPieceType() == PieceType.BISHOP)
+        if (piece.getPieceType() == PieceType.BISHOP){
             return getBishopMoves(board, piece, valMoves, row, col);
-        if (piece.getPieceType() == PieceType.KING)
+        }
+        if (piece.getPieceType() == PieceType.KING){
             return getKingMoves(board, myPosition, piece, valMoves, row, col);
-        if (piece.getPieceType() == PieceType.KNIGHT)
+        }
+        if (piece.getPieceType() == PieceType.KNIGHT){
             return getKnightMoves(board, myPosition, piece, valMoves, row, col);
-        if (piece.getPieceType() == PieceType.PAWN)
+        }
+        if (piece.getPieceType() == PieceType.PAWN){
             return getPawnMoves(board, myPosition, piece, valMoves, row, col);
-        if (piece.getPieceType() == PieceType.QUEEN)
+        }
+        if (piece.getPieceType() == PieceType.QUEEN){
             return getQueenMoves(board,piece, valMoves, row, col);
-        if (piece.getPieceType() == PieceType.ROOK)
+        }
+        if (piece.getPieceType() == PieceType.ROOK){
             return getRookMoves(board,piece, valMoves, row, col);
+        }
         return null;
     }
 }
