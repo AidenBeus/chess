@@ -11,6 +11,19 @@ import java.util.Objects;
  * signature of the existing methods.
  */
 public class ChessGame {
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ChessGame chessGame = (ChessGame) o;
+        return Objects.equals(board, chessGame.board) && turn == chessGame.turn;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(board, turn);
+    }
 
     ChessBoard board = new ChessBoard();
     TeamColor turn = TeamColor.WHITE;
@@ -44,6 +57,15 @@ public class ChessGame {
         BLACK
     }
 
+    private ChessBoard copyBoard(ChessBoard original){
+        ChessBoard copy = new ChessBoard();
+        for(int i = 1; i <= 8; i++){
+            for(int j = 1; j <= 8; j++){
+                copy.addPiece(new ChessPosition(i, j), original.getPiece(new ChessPosition(i, j)));
+            }
+        }
+        return copy;
+    }
     /**
      * Gets all valid moves for a piece at the given location
      *
@@ -57,9 +79,20 @@ public class ChessGame {
             return null;
         }
         Collection<ChessMove> moves = piece.pieceMoves(board, startPosition);
-
-        return moves;
+        Collection<ChessMove> results = new ArrayList<>();
+        for (ChessMove temp: moves){
+            ChessBoard test = copyBoard(board);
+            test.addPiece(temp.getStartPosition(), null);
+            test.addPiece(temp.getEndPosition(), piece);
+            ChessGame testGame = new ChessGame();
+            testGame.setBoard(test);
+            if(!testGame.isInCheck(piece.getTeamColor())){
+                results.add(temp);
+            }
+        }
+        return results;
     }
+
 
     /**
      * Makes a move in the chess game
@@ -68,7 +101,18 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        throw new RuntimeException("Not implemented");
+        if (move == null){
+            throw new InvalidMoveException();
+        }
+        Collection<ChessMove> valMoves = validMoves(move.getStartPosition());
+        if(!valMoves.contains(move)){
+            throw new InvalidMoveException();
+        }
+        ChessPiece piece = board.getPiece(move.getStartPosition());
+        ChessBoard temp = getBoard();
+        temp.addPiece(move.getStartPosition(), null);
+        temp.addPiece(move.getEndPosition(), piece);
+        setBoard(temp);
     }
 
     /**
@@ -143,5 +187,12 @@ public class ChessGame {
      */
     public ChessBoard getBoard() {
         return board;
+    }
+    @Override
+    public String toString() {
+        return "ChessGame{" +
+                "board=" + board +
+                ", turn=" + turn +
+                '}';
     }
 }
