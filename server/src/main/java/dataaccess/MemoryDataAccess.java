@@ -1,6 +1,7 @@
 package dataaccess;
 
 import chess.ChessGame;
+import model.AuthData;
 import model.ChessList;
 import model.UserData;
 
@@ -15,15 +16,19 @@ public class MemoryDataAccess implements DataAccess{
         return new ChessList(games.values());
     }
 
-    public UserData register(UserData user) throws AlreadyTakenException{
+    public AuthData register(UserData user) throws AlreadyTakenException{
         users.put(user.username(), user);
-        return user;
+        return AuthData.generateToken(user.username());
     }
 
     public UserData getUser(String username){
         return users.get(username);
     }
-    @Override
+
+    public AuthData login(String username) throws DataAccessException {
+        return AuthData.generateToken(username);
+    }
+
     public void clear() throws DataAccessException {
         games.clear();
     }

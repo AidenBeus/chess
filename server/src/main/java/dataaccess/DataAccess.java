@@ -1,12 +1,14 @@
 package dataaccess;
 
 import chess.ChessGame;
+import model.AuthData;
 import model.ChessList;
 import model.UserData;
 
 public interface DataAccess {
     ChessList listGames();
-    UserData register(UserData user) throws AlreadyTakenException;
+    AuthData register(UserData user) throws AlreadyTakenException;
     UserData getUser(String username) throws DataAccessException;
+    AuthData login(String username) throws DataAccessException;
     void clear() throws DataAccessException;
 }
