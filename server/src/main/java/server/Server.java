@@ -1,10 +1,14 @@
 package server;
 
+import chess.ChessGame;
+import com.google.gson.Gson;
+import dataaccess.AlreadyTakenException;
 import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
 import io.javalin.*;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
+import model.UserData;
 import org.jetbrains.annotations.NotNull;
 import service.ChessService;
 
@@ -16,6 +20,7 @@ public class Server {
     public Server() {
         service = (new ChessService(new MemoryDataAccess()));
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
+                .post("/user", this::register)
                 .delete("/db", this::clear)
         ;
         // Register your endpoints and exception handlers here.
@@ -31,6 +36,11 @@ public class Server {
         javalin.stop();
     }
 
+    private void register(Context context) throws DataAccessException, AlreadyTakenException {
+        UserData user = new Gson().fromJson(context.body(), UserData.class);
+        user = service.register(user);
+        context.result(new Gson().toJson(user));
+    }
     private void clear(Context context) throws DataAccessException{
         service.clear();
         context.status(200);
