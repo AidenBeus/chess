@@ -19,6 +19,9 @@ public class ChessService {
         this.dataAccess = dataAccess;
     }
 
+    public UserData getUser(String username) throws DataAccessException {
+        return dataAccess.getUser(username);
+    }
     public void clear() throws DataAccessException {
         Collection<ChessGame> games = dataAccess.listGames();
         if(!games.isEmpty()){

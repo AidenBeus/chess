@@ -40,6 +40,9 @@ public class Server {
 
     private void register(Context context) throws DataAccessException, AlreadyTakenException {
         UserData user = new Gson().fromJson(context.body(), UserData.class);
+        if (service.getUser(user.username()) != null){
+            context.status(400);
+        }
         AuthData result = service.register(user);
         context.result(new Gson().toJson(result));
     }
