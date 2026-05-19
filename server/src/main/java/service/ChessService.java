@@ -4,10 +4,7 @@ import chess.ChessGame;
 import dataaccess.AlreadyTakenException;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
-import model.AuthData;
-import model.ClearRequest;
-import model.ClearResult;
-import model.UserData;
+import model.*;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -55,5 +52,12 @@ public class ChessService {
             throw new DataAccessException("No auth exists");
         }
         dataAccess.logout(authToken);
+    }
+    public ChessList listGames(String authToken) throws DataAccessException {
+        AuthData auth = dataAccess.getAuth(authToken);
+        if (auth == null) {
+            throw new DataAccessException("No auth exists");
+        }
+        return dataAccess.listGames();
     }
 }

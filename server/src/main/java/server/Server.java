@@ -9,6 +9,7 @@ import io.javalin.*;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
 import model.AuthData;
+import model.ChessList;
 import model.UserData;
 import org.jetbrains.annotations.NotNull;
 import service.ChessService;
@@ -27,6 +28,7 @@ public class Server {
                 .post("/user", this::register)
                 .post("/session", this::login)
                 .delete("/session", this::logout)
+                .get("/game", this::listGames)
                 .delete("/db", this::clear)
         ;
         // Register your endpoints and exception handlers here.
@@ -75,7 +77,6 @@ public class Server {
     }
     private void logout(Context context) throws DataAccessException {
         String authToken = context.header("authorization");
-
         if (authToken == null || authToken.isBlank()) {
             context.status(401);
             context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));
@@ -85,6 +86,22 @@ public class Server {
             service.logout(authToken);
             context.status(200);
             context.result("{}");
+        } catch (DataAccessException e) {
+            context.status(401);
+            context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));
+        }
+    }
+    private void listGames(Context context) throws DataAccessException{
+        String authToken = context.header("authorization");
+        if (authToken == null || authToken.isBlank()) {
+            context.status(401);
+            context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));
+            return;
+        }
+        try {
+            ChessList games = service.listGames(authToken);
+            context.status(200);
+            context.result(new Gson().toJson(games));
         } catch (DataAccessException e) {
             context.status(401);
             context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));
