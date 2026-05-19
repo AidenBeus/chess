@@ -78,7 +78,7 @@ public class ChessService {
                 dataAccess.joinGame(playerColor, username, gameId);
             }
             else{
-                throw new DataAccessException("Player with same color already exists");
+                throw new AlreadyTakenException("Player with same color already exists");
             }
         }
         if(Objects.equals(playerColor, "BLACK")){
@@ -86,7 +86,7 @@ public class ChessService {
                 dataAccess.joinGame(playerColor, username, gameId);
             }
             else{
-                throw new DataAccessException("Player with same color already exists");
+                throw new AlreadyTakenException("Player with same color already exists");
             }
         }
     }
