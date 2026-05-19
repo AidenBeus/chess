@@ -8,9 +8,7 @@ import dataaccess.MemoryDataAccess;
 import io.javalin.*;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
-import model.AuthData;
-import model.ChessList;
-import model.UserData;
+import model.*;
 import org.jetbrains.annotations.NotNull;
 import service.ChessService;
 
@@ -29,6 +27,8 @@ public class Server {
                 .post("/session", this::login)
                 .delete("/session", this::logout)
                 .get("/game", this::listGames)
+                .post("/game", this::createGame)
+                .put("/game", this::joinGame)
                 .delete("/db", this::clear)
         ;
         // Register your endpoints and exception handlers here.
@@ -102,6 +102,59 @@ public class Server {
             ChessList games = service.listGames(authToken);
             context.status(200);
             context.result(new Gson().toJson(games));
+        } catch (DataAccessException e) {
+            context.status(401);
+            context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));
+        }
+    }
+    private void createGame(Context context) throws DataAccessException{
+        String authToken = context.header("authorization");
+        GameData request = new Gson().fromJson(context.body(), GameData.class);
+        String gameName = request.gameName();
+        if(gameName == null){
+            context.status(400);
+            context.result(new Gson().toJson(Map.of("message", "Error: No game name")));
+            return;
+        }
+        if (authToken == null || authToken.isBlank()) {
+            context.status(401);
+            context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));
+            return;
+        }
+        try {
+            GameData game = service.createGame(authToken, gameName);
+            context.status(200);
+            context.result(new Gson().toJson(game));
+        } catch (DataAccessException e) {
+            context.status(401);
+            context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));
+        }
+    }
+    private void joinGame(Context context) throws DataAccessException{
+        String authToken = context.header("authorization");
+        JoinGameRequest request = new Gson().fromJson(context.body(), JoinGameRequest.class);
+        String playerColor = request.playerColor();
+        int gameId = request.gameId();
+        if(playerColor == null){
+            context.status(400);
+            context.result(new Gson().toJson(Map.of("message", "Error: No color")));
+            return;
+        }
+        if (authToken == null || authToken.isBlank()) {
+            context.status(401);
+            context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));
+            return;
+        }
+        String username = service.getAuth(authToken).username();
+        GameData game = service.getGame(gameId);
+        if (game == null){
+            context.status(400);
+            context.result(new Gson().toJson(Map.of("message", "Error: Bad Request")));
+            return;
+        }
+        try {
+            service.joinGame(authToken, playerColor, username, gameId);
+            context.status(200);
         } catch (DataAccessException e) {
             context.status(401);
             context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));

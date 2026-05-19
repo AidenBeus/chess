@@ -60,4 +60,37 @@ public class ChessService {
         }
         return dataAccess.listGames();
     }
+    public GameData createGame(String authToken, String gameName) throws DataAccessException {
+        AuthData auth = dataAccess.getAuth(authToken);
+        if (auth == null) {
+            throw new DataAccessException("No auth exists");
+        }
+        return dataAccess.createGame(gameName);
+    }
+    public void joinGame(String authToken, String playerColor, String username, int gameId) throws DataAccessException {
+        AuthData auth = dataAccess.getAuth(authToken);
+        if (auth == null) {
+            throw new DataAccessException("No auth exists");
+        }
+        GameData game = dataAccess.getGame(gameId);
+        if(Objects.equals(playerColor, "WHITE")){
+            if (game.whiteUsername() == null){
+                dataAccess.joinGame(playerColor, username, gameId);
+            }
+            else{
+                throw new DataAccessException("Player with same color already exists");
+            }
+        }
+        if(Objects.equals(playerColor, "BLACK")){
+            if (game.blackUsername() == null){
+                dataAccess.joinGame(playerColor, username, gameId);
+            }
+            else{
+                throw new DataAccessException("Player with same color already exists");
+            }
+        }
+    }
+    public GameData getGame(int gameId) throws DataAccessException {
+        return dataAccess.getGame(gameId);
+    }
 }
