@@ -67,7 +67,7 @@ public class ChessService {
         }
         return dataAccess.createGame(gameName);
     }
-    public void joinGame(String authToken, String playerColor, String username, int gameId) throws DataAccessException {
+    public void joinGame(String authToken, String playerColor, String username, int gameId) throws DataAccessException, AlreadyTakenException {
         AuthData auth = dataAccess.getAuth(authToken);
         if (auth == null) {
             throw new DataAccessException("No auth exists");
