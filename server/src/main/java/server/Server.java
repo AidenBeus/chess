@@ -57,10 +57,16 @@ public class Server {
     }
     private void login(Context context) throws DataAccessException{
         UserData user = new Gson().fromJson(context.body(), UserData.class);
-        if(user.username() == null || user.password() == null || user.email() == null){
+        if(user.username() == null || user.password() == null){
             context.status(400);
             context.result(new Gson().toJson(Map.of("message", "Error: Bad Request")));
             return;
+        }
+        UserData existingUser = service.getUser(user.username());
+        if(existingUser == null || !user.password().equals(existingUser.password())){
+                context.status(401);
+                context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));
+                return;
         }
         AuthData result = service.login(user.username(), user.password());
         context.result(new Gson().toJson(result));
