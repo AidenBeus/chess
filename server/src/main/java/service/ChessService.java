@@ -23,10 +23,7 @@ public class ChessService {
         return dataAccess.getUser(username);
     }
     public void clear() throws DataAccessException {
-        Collection<ChessGame> games = dataAccess.listGames();
-        if(!games.isEmpty()){
-            dataAccess.clear();
-        }
+        dataAccess.clear();
     }
     public AuthData register(UserData user) throws AlreadyTakenException, DataAccessException {
         UserData exists = dataAccess.getUser(user.username());
@@ -48,5 +45,15 @@ public class ChessService {
         else{
             return dataAccess.login(username);
         }
+    }
+    public AuthData getAuth(String authToken) throws DataAccessException {
+        return dataAccess.getAuth(authToken);
+    }
+    public void logout(String authToken) throws DataAccessException {
+        AuthData auth = dataAccess.getAuth(authToken);
+        if (auth == null) {
+            throw new DataAccessException("No auth exists");
+        }
+        dataAccess.logout(authToken);
     }
 }

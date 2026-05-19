@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import service.ChessService;
 
 import java.util.Map;
+import java.util.Objects;
 
 public class Server {
 
@@ -25,6 +26,7 @@ public class Server {
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
                 .post("/user", this::register)
                 .post("/session", this::login)
+                .delete("/session", this::logout)
                 .delete("/db", this::clear)
         ;
         // Register your endpoints and exception handlers here.
@@ -70,6 +72,23 @@ public class Server {
         }
         AuthData result = service.login(user.username(), user.password());
         context.result(new Gson().toJson(result));
+    }
+    private void logout(Context context) throws DataAccessException {
+        String authToken = context.header("authorization");
+
+        if (authToken == null || authToken.isBlank()) {
+            context.status(401);
+            context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));
+            return;
+        }
+        try {
+            service.logout(authToken);
+            context.status(200);
+            context.result("{}");
+        } catch (DataAccessException e) {
+            context.status(401);
+            context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));
+        }
     }
     private void clear(Context context) throws DataAccessException{
         service.clear();
