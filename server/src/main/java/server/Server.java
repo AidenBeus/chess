@@ -13,6 +13,8 @@ import model.UserData;
 import org.jetbrains.annotations.NotNull;
 import service.ChessService;
 
+import java.util.Map;
+
 public class Server {
 
     private final Javalin javalin;
@@ -40,14 +42,26 @@ public class Server {
 
     private void register(Context context) throws DataAccessException, AlreadyTakenException {
         UserData user = new Gson().fromJson(context.body(), UserData.class);
-        if (service.getUser(user.username()) != null){
+        if(user.username() == null || user.password() == null || user.email() == null){
             context.status(400);
+            context.result(new Gson().toJson(Map.of("message", "Error: Bad Request")));
+            return;
+        }
+        if (service.getUser(user.username()) != null){
+            context.status(403);
+            context.result(new Gson().toJson(Map.of("message", "Error: Already Taken")));
+            return;
         }
         AuthData result = service.register(user);
         context.result(new Gson().toJson(result));
     }
     private void login(Context context) throws DataAccessException{
         UserData user = new Gson().fromJson(context.body(), UserData.class);
+        if(user.username() == null || user.password() == null || user.email() == null){
+            context.status(400);
+            context.result(new Gson().toJson(Map.of("message", "Error: Bad Request")));
+            return;
+        }
         AuthData result = service.login(user.username(), user.password());
         context.result(new Gson().toJson(result));
     }
