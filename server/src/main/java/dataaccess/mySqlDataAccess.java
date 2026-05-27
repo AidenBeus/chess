@@ -157,6 +157,20 @@ public class mySqlDataAccess implements DataAccess{
     }
 
     public GameData getGame(int gameId) throws DataAccessException {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            var statement = "SELECT chessGame FROM games WHERE id=?";
+            try (PreparedStatement ps = conn.prepareStatement(statement)) {
+                ps.setInt(1, gameId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        String json = rs.getString("chessGame");
+                        return new Gson().fromJson(json, GameData.class);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new DataAccessException("Unable to read auth data", e);
+        }
         return null;
     }
 
