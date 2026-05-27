@@ -1,5 +1,6 @@
 package dataaccess;
 
+import chess.ChessGame;
 import com.google.gson.Gson;
 import model.AuthData;
 import model.ChessList;
@@ -7,10 +8,7 @@ import model.GameData;
 import model.UserData;
 import org.mindrot.jbcrypt.BCrypt;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
 import static java.sql.Statement.RETURN_GENERATED_KEYS;
 import static java.sql.Types.NULL;
@@ -113,6 +111,24 @@ public class mySqlDataAccess implements DataAccess{
     }
 
     public GameData createGame(String gameName) throws DataAccessException {
+        var statement = "INSERT INTO games (whiteUsername, blackUsername, gameName, chessGame) VALUES (?, ?, ?, ?)";
+        try (var conn = DatabaseManager.getConnection();
+             var ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
+            ps.setNull(1, NULL);
+            ps.setNull(2, NULL);
+            ps.setString(3, gameName);
+            ps.setString(4, new Gson().toJson(new ChessGame()));
+
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return new GameData(rs.getInt(1), null, null, gameName, new ChessGame());
+                }
+            }
+            throw new DataAccessException("No game ID created");
+        } catch (SQLException | ResponseException ex) {
+            throw new DataAccessException("Unable to create auth data", ex);
+        }
         return null;
     }
 
