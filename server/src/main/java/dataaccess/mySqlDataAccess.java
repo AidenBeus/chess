@@ -5,6 +5,7 @@ import model.AuthData;
 import model.ChessList;
 import model.GameData;
 import model.UserData;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -24,10 +25,6 @@ public class mySqlDataAccess implements DataAccess{
     }
 
     public AuthData register(UserData user) throws AlreadyTakenException, ResponseException, DataAccessException {
-        UserData existingUser = getUser(user.username());
-        if (existingUser != null) {
-            throw new AlreadyTakenException("This user already exists!");
-        }
         var statement = "INSERT INTO users (username, password, email) VALUES (?, ?, ?)";
         try (var conn = DatabaseManager.getConnection();
              var ps = conn.prepareStatement(statement)) {
@@ -44,7 +41,7 @@ public class mySqlDataAccess implements DataAccess{
         }
     }
 
-    public UserData getUser(String username) throws DataAccessException, ResponseException {
+    public UserData getUser(String username) throws DataAccessException {
         try (Connection conn = DatabaseManager.getConnection()) {
             var statement = "SELECT id, username, password, email FROM users WHERE username=?";
             try (PreparedStatement ps = conn.prepareStatement(statement)) {
@@ -59,13 +56,13 @@ public class mySqlDataAccess implements DataAccess{
                 }
             }
         } catch (Exception e) {
-            throw new ResponseException(ResponseException.Code.ServerError, String.format("Unable to read data: %s", e.getMessage()));
+            throw new DataAccessException("Unable to read user data", e);
         }
         return null;
     }
 
     public AuthData login(String username) throws DataAccessException {
-        return null;
+        return addAuth(username);
     }
 
     public AuthData addAuth(String username) throws DataAccessException {
@@ -80,16 +77,39 @@ public class mySqlDataAccess implements DataAccess{
             return auth;
 
         } catch (SQLException | ResponseException ex) {
-            throw new DataAccessException("Unable to create user", ex);
+            throw new DataAccessException("Unable to create auth data", ex);
         }
     }
 
     public AuthData getAuth(String authToken) throws DataAccessException {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            var statement = "SELECT authToken, username FROM auth WHERE authToken=?";
+            try (PreparedStatement ps = conn.prepareStatement(statement)) {
+                ps.setString(1, authToken);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return new AuthData(rs.getString("authToken"),
+                                rs.getString("username")
+                        );
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new DataAccessException("Unable to read auth data", e);
+        }
         return null;
     }
 
     public void logout(String authToken) throws DataAccessException {
+        var statement = "DELETE FROM auth WHERE authToken = ?";
+        try (var conn = DatabaseManager.getConnection();
+             var ps = conn.prepareStatement(statement)) {
+            ps.setString(1, authToken);
+            ps.executeUpdate();
 
+        } catch (SQLException | ResponseException ex) {
+            throw new DataAccessException("Unable to delete auth data", ex);
+        }
     }
 
     public GameData createGame(String gameName) throws DataAccessException {
