@@ -54,7 +54,7 @@ public class DatabaseManager {
             preparedStatement.executeUpdate();
 
         } catch (SQLException ex) {
-            throw new DataAccessException("failed to create users table", ex);
+            throw new DataAccessException("failed to create games table", ex);
         }
     }
 
@@ -63,7 +63,7 @@ public class DatabaseManager {
                 """
                 CREATE TABLE IF NOT EXISTS users (
                     id INT PRIMARY KEY AUTO_INCREMENT,
-                    username VARCHAR(255) NOT NULL,
+                    username VARCHAR(255) NOT NULL UNIQUE,
                     password VARCHAR(255) NOT NULL,
                     email VARCHAR(255) NOT NULL
                 )
@@ -94,7 +94,7 @@ public class DatabaseManager {
             preparedStatement.executeUpdate();
 
         } catch (SQLException ex) {
-            throw new DataAccessException("failed to create users table", ex);
+            throw new DataAccessException("failed to create auth table", ex);
         }
     }
     /**

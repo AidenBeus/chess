@@ -8,8 +8,8 @@ import model.UserData;
 
 public interface DataAccess {
     ChessList listGames();
-    AuthData register(UserData user) throws AlreadyTakenException;
-    UserData getUser(String username) throws DataAccessException;
+    AuthData register(UserData user) throws AlreadyTakenException, ResponseException, DataAccessException;
+    UserData getUser(String username) throws DataAccessException, ResponseException;
     AuthData login(String username) throws DataAccessException;
     AuthData getAuth(String authToken) throws DataAccessException;
     void logout(String authToken) throws DataAccessException;

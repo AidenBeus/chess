@@ -4,6 +4,7 @@ import chess.ChessGame;
 import dataaccess.AlreadyTakenException;
 import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
+import dataaccess.ResponseException;
 import model.*;
 
 import java.util.Collection;
@@ -16,13 +17,13 @@ public class ChessService {
         this.dataAccess = dataAccess;
     }
 
-    public UserData getUser(String username) throws DataAccessException {
+    public UserData getUser(String username) throws DataAccessException, ResponseException {
         return dataAccess.getUser(username);
     }
     public void clear() throws DataAccessException {
         dataAccess.clear();
     }
-    public AuthData register(UserData user) throws AlreadyTakenException, DataAccessException {
+    public AuthData register(UserData user) throws AlreadyTakenException, DataAccessException, ResponseException {
         UserData exists = dataAccess.getUser(user.username());
         if (exists == null){
             return dataAccess.register(user);
@@ -31,7 +32,7 @@ public class ChessService {
             throw new AlreadyTakenException("This user already exists");
         }
     }
-    public AuthData login(String username, String password) throws DataAccessException {
+    public AuthData login(String username, String password) throws DataAccessException, ResponseException {
         UserData user = dataAccess.getUser(username);
         if (user == null || !Objects.equals(user.username(), username)){
             throw new DataAccessException("Wrong username");

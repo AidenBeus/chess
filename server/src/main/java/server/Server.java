@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import dataaccess.AlreadyTakenException;
 import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
+import dataaccess.ResponseException;
 import io.javalin.*;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
@@ -44,7 +45,7 @@ public class Server {
         javalin.stop();
     }
 
-    private void register(Context context) throws DataAccessException, AlreadyTakenException {
+    private void register(Context context) throws DataAccessException, AlreadyTakenException, ResponseException {
         UserData user = new Gson().fromJson(context.body(), UserData.class);
         if(user.username() == null || user.password() == null || user.email() == null){
             context.status(400);
@@ -59,7 +60,7 @@ public class Server {
         AuthData result = service.register(user);
         context.result(new Gson().toJson(result));
     }
-    private void login(Context context) throws DataAccessException{
+    private void login(Context context) throws DataAccessException, ResponseException {
         UserData user = new Gson().fromJson(context.body(), UserData.class);
         if(user.username() == null || user.password() == null){
             context.status(400);

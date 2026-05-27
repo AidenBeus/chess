@@ -3,6 +3,7 @@ package service;
 import dataaccess.AlreadyTakenException;
 import dataaccess.DataAccessException;
 import dataaccess.MemoryDataAccess;
+import dataaccess.ResponseException;
 import model.AuthData;
 import model.GameData;
 import model.UserData;
@@ -50,7 +51,7 @@ public class ChessServerTest {
     }
 
     @Test
-    void getUserNegative() throws DataAccessException {
+    void getUserNegative() throws DataAccessException, ResponseException {
         assertNull(service.getUser("missing"));
     }
 
