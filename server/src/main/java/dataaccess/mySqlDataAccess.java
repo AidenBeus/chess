@@ -9,7 +9,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 public class mySqlDataAccess implements DataAccess{
-    private mySqlDataAccess() {
+    private mySqlDataAccess() throws ResponseException, DataAccessException {
         configureDatabase();
     }
 
@@ -66,8 +66,8 @@ public class mySqlDataAccess implements DataAccess{
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
             """
     };
-    private void configureDatabase() throws ResponseException {
-        DatabaseManager.createDatabase();
+    private void configureDatabase() throws ResponseException, DataAccessException {
+        DatabaseManager.initializeSchema();
         try (Connection conn = DatabaseManager.getConnection()) {
             for (String statement : createStatements) {
                 try (var preparedStatement = conn.prepareStatement(statement)) {

@@ -29,6 +29,71 @@ public class DatabaseManager {
         }
     }
 
+    static public void initializeSchema() throws DataAccessException {
+        createDatabase();
+        createGamesTable();
+        createUsersTable();
+        createAuthTable();
+    }
+
+    static public void createGamesTable() throws DataAccessException {
+        var statement =
+                """
+                CREATE TABLE IF NOT EXISTS games (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    username VARCHAR(255) NOT NULL,
+                    password VARCHAR(255) NOT NULL
+                )
+                """;
+
+        try (var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword);
+             var preparedStatement = conn.prepareStatement(statement)) {
+
+            preparedStatement.executeUpdate();
+
+        } catch (SQLException ex) {
+            throw new DataAccessException("failed to create users table", ex);
+        }
+    }
+
+    static public void createUsersTable() throws DataAccessException {
+        var statement =
+                """
+                CREATE TABLE IF NOT EXISTS users (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    username VARCHAR(255) NOT NULL,
+                    password VARCHAR(255) NOT NULL
+                )
+                """;
+        try (var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword);
+             var preparedStatement = conn.prepareStatement(statement)) {
+
+            preparedStatement.executeUpdate();
+
+        } catch (SQLException ex) {
+            throw new DataAccessException("failed to create users table", ex);
+        }
+    }
+
+    static public void createAuthTable() throws DataAccessException {
+        var statement =
+                """
+                CREATE TABLE IF NOT EXISTS auth (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    username VARCHAR(255) NOT NULL,
+                    password VARCHAR(255) NOT NULL
+                )
+                """;
+
+        try (var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword);
+             var preparedStatement = conn.prepareStatement(statement)) {
+
+            preparedStatement.executeUpdate();
+
+        } catch (SQLException ex) {
+            throw new DataAccessException("failed to create users table", ex);
+        }
+    }
     /**
      * Create a connection to the database and sets the catalog based upon the
      * properties specified in db.properties. Connections to the database should
