@@ -7,7 +7,7 @@ import model.GameData;
 import model.UserData;
 
 public interface DataAccess {
-    ChessList listGames();
+    ChessList listGames() throws DataAccessException;
     AuthData register(UserData user) throws AlreadyTakenException, ResponseException, DataAccessException;
     UserData getUser(String username) throws DataAccessException, ResponseException;
     AuthData login(String username) throws DataAccessException;

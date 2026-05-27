@@ -6,6 +6,7 @@ import dataaccess.DataAccess;
 import dataaccess.DataAccessException;
 import dataaccess.ResponseException;
 import model.*;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -37,7 +38,7 @@ public class ChessService {
         if (user == null || !Objects.equals(user.username(), username)){
             throw new DataAccessException("Wrong username");
         }
-        if (!Objects.equals(user.password(), password)){
+        if (!BCrypt.checkpw(password, user.password())) {
             throw new DataAccessException("Wrong password");
         }
         else{

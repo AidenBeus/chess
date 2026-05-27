@@ -9,18 +9,49 @@ import model.UserData;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Objects;
 
 import static java.sql.Statement.RETURN_GENERATED_KEYS;
-import static java.sql.Types.NULL;
 
 public class mySqlDataAccess implements DataAccess{
-    private mySqlDataAccess() throws ResponseException, DataAccessException {
-        configureDatabase();
+    public mySqlDataAccess() {
+        try {
+            configureDatabase();
+        } catch (ResponseException | DataAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public ChessList listGames() {
-        return null;
+    public ChessList listGames() throws DataAccessException {
+        var games = new ArrayList<GameData>();
+
+        var statement = "SELECT id, whiteUsername, blackUsername, gameName, chessGame FROM games";
+
+        try (var conn = DatabaseManager.getConnection();
+             var ps = conn.prepareStatement(statement);
+             var rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                ChessGame chessGame = new Gson().fromJson(
+                        rs.getString("chessGame"),
+                        ChessGame.class
+                );
+
+                games.add(new GameData(
+                        rs.getInt("id"),
+                        rs.getString("whiteUsername"),
+                        rs.getString("blackUsername"),
+                        rs.getString("gameName"),
+                        chessGame
+                ));
+            }
+
+            return new ChessList(games);
+
+        } catch (SQLException | ResponseException e) {
+            throw new DataAccessException("Unable to list games", e);
+        }
     }
 
     public AuthData register(UserData user) throws AlreadyTakenException, ResponseException, DataAccessException {
@@ -54,7 +85,7 @@ public class mySqlDataAccess implements DataAccess{
                     }
                 }
             }
-        } catch (Exception e) {
+        } catch (SQLException | ResponseException e) {
             throw new DataAccessException("Unable to read user data", e);
         }
         return null;
@@ -93,7 +124,7 @@ public class mySqlDataAccess implements DataAccess{
                     }
                 }
             }
-        } catch (Exception e) {
+        } catch (SQLException | ResponseException e) {
             throw new DataAccessException("Unable to read auth data", e);
         }
         return null;
@@ -112,95 +143,114 @@ public class mySqlDataAccess implements DataAccess{
     }
 
     public GameData createGame(String gameName) throws DataAccessException {
-        var statement = "INSERT INTO games (whiteUsername, blackUsername, gameName, chessGame) VALUES (?, ?, ?, ?)";
+        var statement = "INSERT INTO games (whiteUsername, blackUsername, gameName, chessGame)VALUES (?, ?, ?, ?)";
         try (var conn = DatabaseManager.getConnection();
              var ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
-            ps.setNull(1, NULL);
-            ps.setNull(2, NULL);
+
+            ps.setNull(1, Types.VARCHAR);
+            ps.setNull(2, Types.VARCHAR);
             ps.setString(3, gameName);
             ps.setString(4, new Gson().toJson(new ChessGame()));
 
             ps.executeUpdate();
+
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
-                    return new GameData(rs.getInt(1), null, null, gameName, new ChessGame());
+                    return new GameData(
+                            rs.getInt(1),
+                            null,
+                            null,
+                            gameName,
+                            new ChessGame()
+                    );
                 }
             }
+
             throw new DataAccessException("No game ID created");
         } catch (SQLException | ResponseException ex) {
-            throw new DataAccessException("Unable to create auth data", ex);
+            throw new DataAccessException("Unable to create game", ex);
         }
     }
 
-    public void joinGame(String playerColor, String username, int gameId) throws DataAccessException, AlreadyTakenException {
-        var statement = "UPDATE games SET whiteUsername = ? WHERE id = ?";
+    public void joinGame(String playerColor, String username, int gameId)
+            throws DataAccessException, AlreadyTakenException {
+
+        String statement;
+
         if (Objects.equals(playerColor, "WHITE")) {
-            statement = "UPDATE games SET whiteUsername = ? WHERE id = ?";
+            statement = "UPDATE games SET whiteUsername = ? WHERE id = ? AND whiteUsername IS NULL";
+        } else if (Objects.equals(playerColor, "BLACK")) {
+            statement = "UPDATE games SET blackUsername = ? WHERE id = ? AND blackUsername IS NULL";
+        } else {
+            throw new DataAccessException("Invalid player color");
         }
-        else {
-            statement = "UPDATE games SET blackUsername = ? WHERE id = ?";
-        }
+
         try (var conn = DatabaseManager.getConnection();
              var ps = conn.prepareStatement(statement)) {
+
             ps.setString(1, username);
             ps.setInt(2, gameId);
 
             int rowsUpdated = ps.executeUpdate();
             if (rowsUpdated == 0) {
-                throw new DataAccessException("Game not found");
+                throw new AlreadyTakenException("That seat is already taken or the game does not exist.");
             }
-        } catch (SQLException ex) {
+
+        } catch (SQLException | ResponseException ex) {
             throw new DataAccessException("Unable to update game", ex);
-        } catch (ResponseException e) {
-            throw new RuntimeException(e);
         }
     }
 
     public GameData getGame(int gameId) throws DataAccessException {
         try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "SELECT chessGame FROM games WHERE id=?";
+            var statement = "SELECT id, whiteUsername, blackUsername, gameName, chessGame FROM games WHERE id = ?";
             try (PreparedStatement ps = conn.prepareStatement(statement)) {
                 ps.setInt(1, gameId);
+
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
-                        String json = rs.getString("chessGame");
-                        return new Gson().fromJson(json, GameData.class);
+                        ChessGame chessGame = new Gson().fromJson(
+                                rs.getString("chessGame"),
+                                ChessGame.class
+                        );
+
+                        return new GameData(
+                                rs.getInt("id"),
+                                rs.getString("whiteUsername"),
+                                rs.getString("blackUsername"),
+                                rs.getString("gameName"),
+                                chessGame
+                        );
                     }
                 }
             }
-        } catch (Exception e) {
-            throw new DataAccessException("Unable to read auth data", e);
+        } catch (SQLException | ResponseException e) {
+            throw new DataAccessException("Unable to read game data", e);
         }
         return null;
     }
 
     public void clear() throws DataAccessException {
+            try (var conn = DatabaseManager.getConnection()) {
 
+                try (var ps = conn.prepareStatement("DELETE FROM auth")) {
+                    ps.executeUpdate();
+                }
+
+                try (var ps = conn.prepareStatement("DELETE FROM games")) {
+                    ps.executeUpdate();
+                }
+
+                try (var ps = conn.prepareStatement("DELETE FROM users")) {
+                    ps.executeUpdate();
+                }
+
+            } catch (SQLException | ResponseException ex) {
+                throw new DataAccessException("Unable to clear database", ex);
+            }
     }
 
-    private final String[] createStatements = {
-            """
-            CREATE TABLE IF NOT EXISTS  pet (
-              `id` int NOT NULL AUTO_INCREMENT,
-              `name` varchar(256) NOT NULL,
-              `type` ENUM('CAT', 'DOG', 'FISH', 'FROG', 'ROCK') DEFAULT 'CAT',
-              `json` TEXT DEFAULT NULL,
-              PRIMARY KEY (`id`),
-              INDEX(type),
-              INDEX(name)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
-            """
-    };
     private void configureDatabase() throws ResponseException, DataAccessException {
         DatabaseManager.initializeSchema();
-        try (Connection conn = DatabaseManager.getConnection()) {
-            for (String statement : createStatements) {
-                try (var preparedStatement = conn.prepareStatement(statement)) {
-                    preparedStatement.executeUpdate();
-                }
-            }
-        } catch (SQLException ex) {
-            throw new ResponseException(ResponseException.Code.ServerError, String.format("Unable to configure database: %s", ex.getMessage()));
-        }
     }
 }

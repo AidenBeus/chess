@@ -14,6 +14,11 @@ public class DatabaseManager {
      */
     static {
         loadPropertiesFromResources();
+        try {
+            initializeSchema();
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -48,13 +53,15 @@ public class DatabaseManager {
                 )
                 """;
 
-        try (var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword);
+        try (var conn = getConnection();
              var preparedStatement = conn.prepareStatement(statement)) {
 
             preparedStatement.executeUpdate();
 
         } catch (SQLException ex) {
             throw new DataAccessException("failed to create games table", ex);
+        } catch (ResponseException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -68,13 +75,15 @@ public class DatabaseManager {
                     email VARCHAR(255) NOT NULL
                 )
                 """;
-        try (var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword);
+        try (var conn = getConnection();
              var preparedStatement = conn.prepareStatement(statement)) {
 
             preparedStatement.executeUpdate();
 
         } catch (SQLException ex) {
             throw new DataAccessException("failed to create users table", ex);
+        } catch (ResponseException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -88,13 +97,15 @@ public class DatabaseManager {
                 )
                 """;
 
-        try (var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword);
+        try (var conn = getConnection();
              var preparedStatement = conn.prepareStatement(statement)) {
 
             preparedStatement.executeUpdate();
 
         } catch (SQLException ex) {
             throw new DataAccessException("failed to create auth table", ex);
+        } catch (ResponseException e) {
+            throw new RuntimeException(e);
         }
     }
     /**
