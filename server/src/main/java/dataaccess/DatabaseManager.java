@@ -64,7 +64,8 @@ public class DatabaseManager {
                 CREATE TABLE IF NOT EXISTS users (
                     id INT PRIMARY KEY AUTO_INCREMENT,
                     username VARCHAR(255) NOT NULL,
-                    password VARCHAR(255) NOT NULL
+                    password VARCHAR(255) NOT NULL,
+                    email VARCHAR(255) NOT NULL
                 )
                 """;
         try (var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword);
@@ -82,8 +83,8 @@ public class DatabaseManager {
                 """
                 CREATE TABLE IF NOT EXISTS auth (
                     id INT PRIMARY KEY AUTO_INCREMENT,
-                    username VARCHAR(255) NOT NULL,
-                    password VARCHAR(255) NOT NULL
+                    authToken VARCHAR(255) NOT NULL,
+                    username VARCHAR(255) NOT NULL
                 )
                 """;
 
