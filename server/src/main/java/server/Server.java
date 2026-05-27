@@ -43,7 +43,7 @@ public class Server {
         try {
             UserData user = new Gson().fromJson(context.body(), UserData.class);
 
-            if (user.username() == null || user.password() == null || user.email() == null) {
+            if (user == null || user.username() == null || user.password() == null || user.email() == null) {
                 context.status(400);
                 context.result(new Gson().toJson(Map.of("message", "Error: Bad Request")));
                 return;
@@ -72,7 +72,7 @@ public class Server {
         try {
             UserData user = new Gson().fromJson(context.body(), UserData.class);
 
-            if (user.username() == null || user.password() == null) {
+            if (user == null || user.username() == null || user.password() == null) {
                 context.status(400);
                 context.result(new Gson().toJson(Map.of("message", "Error: Bad Request")));
                 return;
@@ -95,61 +95,94 @@ public class Server {
             context.status(200);
             context.result(new Gson().toJson(result));
 
+        } catch (IllegalArgumentException e) {
+            context.status(401);
+            context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));
         } catch (DataAccessException | ResponseException e) {
             context.status(500);
             context.result(new Gson().toJson(Map.of("message", "Error: " + e.getMessage())));
         }
     }
+
     private void logout(Context context) {
         String authToken = context.header("authorization");
+
         if (authToken == null || authToken.isBlank()) {
             context.status(401);
             context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));
             return;
         }
+
         try {
+            AuthData auth = service.getAuth(authToken);
+            if (auth == null) {
+                context.status(401);
+                context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));
+                return;
+            }
+
             service.logout(authToken);
             context.status(200);
             context.result("{}");
+
         } catch (DataAccessException e) {
             context.status(500);
-            context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));
+            context.result(new Gson().toJson(Map.of("message", "Error: " + e.getMessage())));
         }
     }
+
     private void listGames(Context context) {
         String authToken = context.header("authorization");
+
         if (authToken == null || authToken.isBlank()) {
             context.status(401);
             context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));
             return;
         }
+
         try {
+            AuthData auth = service.getAuth(authToken);
+            if (auth == null) {
+                context.status(401);
+                context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));
+                return;
+            }
+
             ChessList games = service.listGames(authToken);
             context.status(200);
             context.result(new Gson().toJson(games));
+
         } catch (DataAccessException e) {
             context.status(500);
-            context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));
+            context.result(new Gson().toJson(Map.of("message", "Error: " + e.getMessage())));
         }
     }
+
     private void createGame(Context context) {
+        String authToken = context.header("authorization");
+
+        if (authToken == null || authToken.isBlank()) {
+            context.status(401);
+            context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));
+            return;
+        }
+
         try {
-            String authToken = context.header("authorization");
-            if (authToken == null || authToken.isBlank()) {
+            AuthData auth = service.getAuth(authToken);
+            if (auth == null) {
                 context.status(401);
                 context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));
                 return;
             }
 
             GameData request = new Gson().fromJson(context.body(), GameData.class);
-            String gameName = request.gameName();
-            if (gameName == null) {
+            if (request == null || request.gameName() == null) {
                 context.status(400);
-                context.result(new Gson().toJson(Map.of("message", "Error: No game name")));
+                context.result(new Gson().toJson(Map.of("message", "Error: Bad Request")));
                 return;
             }
 
-            GameData game = service.createGame(authToken, gameName);
+            GameData game = service.createGame(authToken, request.gameName());
             context.status(200);
             context.result(new Gson().toJson(game));
 
@@ -160,16 +193,24 @@ public class Server {
     }
 
     private void joinGame(Context context) {
+        String authToken = context.header("authorization");
+
+        if (authToken == null || authToken.isBlank()) {
+            context.status(401);
+            context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));
+            return;
+        }
+
         try {
-            String authToken = context.header("authorization");
-            if (authToken == null || authToken.isBlank()) {
-                context.status(401);
-                context.result(new Gson().toJson(Map.of("message", "Error: Unauthorized")));
+            JoinGameRequest request = new Gson().fromJson(context.body(), JoinGameRequest.class);
+
+            if (request == null || request.playerColor() == null) {
+                context.status(400);
+                context.result(new Gson().toJson(Map.of("message", "Error: Bad Request")));
                 return;
             }
 
-            JoinGameRequest request = new Gson().fromJson(context.body(), JoinGameRequest.class);
-            if (request == null || request.playerColor() == null) {
+            if (!request.playerColor().equals("WHITE") && !request.playerColor().equals("BLACK")) {
                 context.status(400);
                 context.result(new Gson().toJson(Map.of("message", "Error: Bad Request")));
                 return;
@@ -189,14 +230,9 @@ public class Server {
                 return;
             }
 
-            if (request.playerColor().equals("WHITE") || request.playerColor().equals("BLACK")) {
-                service.joinGame(authToken, request.playerColor(), auth.username(), request.gameID());
-                context.status(200);
-                context.result("{}");
-            } else {
-                context.status(400);
-                context.result(new Gson().toJson(Map.of("message", "Error: Color not WHITE or BLACK")));
-            }
+            service.joinGame(authToken, request.playerColor(), auth.username(), request.gameID());
+            context.status(200);
+            context.result("{}");
 
         } catch (AlreadyTakenException e) {
             context.status(403);

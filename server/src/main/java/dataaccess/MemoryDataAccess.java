@@ -5,6 +5,7 @@ import model.AuthData;
 import model.ChessList;
 import model.GameData;
 import model.UserData;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.util.HashMap;
 import java.util.Objects;
@@ -20,7 +21,8 @@ public class MemoryDataAccess implements DataAccess{
     }
 
     public AuthData register(UserData user) throws AlreadyTakenException{
-        users.put(user.username(), user);
+        String hashedPassword = BCrypt.hashpw(user.password(), BCrypt.gensalt());
+        users.put(user.username(), new UserData(user.username(), hashedPassword, user.email()));
         AuthData auth = AuthData.generateToken(user.username());
         authTokens.put(auth.authToken(), auth);
         return auth;
