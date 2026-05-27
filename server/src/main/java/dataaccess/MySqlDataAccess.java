@@ -14,8 +14,8 @@ import java.util.Objects;
 
 import static java.sql.Statement.RETURN_GENERATED_KEYS;
 
-public class mySqlDataAccess implements DataAccess{
-    public mySqlDataAccess() {
+public class MySqlDataAccess implements DataAccess{
+    public MySqlDataAccess() {
         try {
             configureDatabase();
         } catch (ResponseException | DataAccessException e) {

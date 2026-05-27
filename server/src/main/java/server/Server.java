@@ -16,7 +16,7 @@ public class Server {
     private final ChessService service;
 
     public Server() {
-        service = new ChessService(new mySqlDataAccess());
+        service = new ChessService(new MySqlDataAccess());
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
                 .post("/user", this::register)
                 .post("/session", this::login)

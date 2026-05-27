@@ -10,11 +10,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class MySqlDataAccessTests {
 
-    private mySqlDataAccess dao;
+    private MySqlDataAccess dao;
 
     @BeforeEach
     public void setUp() throws DataAccessException {
-        dao = new mySqlDataAccess();
+        dao = new MySqlDataAccess();
         dao.clear();
     }
 
