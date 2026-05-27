@@ -11,7 +11,7 @@ public interface DataAccess {
     AuthData register(UserData user) throws AlreadyTakenException, ResponseException, DataAccessException;
     UserData getUser(String username) throws DataAccessException, ResponseException;
     AuthData login(String username) throws DataAccessException;
-    AuthData getAuth(String authToken) throws DataAccessException, ResponseException;
+    AuthData getAuth(String authToken) throws DataAccessException;
     void logout(String authToken) throws DataAccessException;
     GameData createGame(String gameName) throws DataAccessException;
     void joinGame(String playerColor, String username, int gameId) throws DataAccessException, AlreadyTakenException;

@@ -9,6 +9,7 @@ import model.UserData;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.*;
+import java.util.Objects;
 
 import static java.sql.Statement.RETURN_GENERATED_KEYS;
 import static java.sql.Types.NULL;
@@ -129,11 +130,30 @@ public class mySqlDataAccess implements DataAccess{
         } catch (SQLException | ResponseException ex) {
             throw new DataAccessException("Unable to create auth data", ex);
         }
-        return null;
     }
 
     public void joinGame(String playerColor, String username, int gameId) throws DataAccessException, AlreadyTakenException {
+        var statement = "UPDATE games SET whiteUsername = ? WHERE id = ?";
+        if (Objects.equals(playerColor, "WHITE")) {
+            statement = "UPDATE games SET whiteUsername = ? WHERE id = ?";
+        }
+        else {
+            statement = "UPDATE games SET blackUsername = ? WHERE id = ?";
+        }
+        try (var conn = DatabaseManager.getConnection();
+             var ps = conn.prepareStatement(statement)) {
+            ps.setString(1, username);
+            ps.setInt(2, gameId);
 
+            int rowsUpdated = ps.executeUpdate();
+            if (rowsUpdated == 0) {
+                throw new DataAccessException("Game not found");
+            }
+        } catch (SQLException ex) {
+            throw new DataAccessException("Unable to update game", ex);
+        } catch (ResponseException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public GameData getGame(int gameId) throws DataAccessException {
