@@ -51,7 +51,7 @@ public class ChessClient {
                     case "quit" -> "quit";
                     case "signin" -> signIn();
                     case "register" -> register();
-                    default -> help();
+                    default -> "valid commands\n" + help();
                 };
             }
             else if (state == State.SIGNEDIN){
@@ -62,7 +62,7 @@ public class ChessClient {
                     case "playgame" -> playGame();
                     case "observegame" -> observeGame();
                     case "quit" -> "quit";
-                    default -> help();
+                    default -> "valid commands\n" + help();
                 };
             }
             else{
@@ -74,7 +74,7 @@ public class ChessClient {
     }
 
 
-    public String signIn() throws ResponseException {
+    public String signIn() {
         Scanner scanner = new Scanner(System.in);
 
         System.out.print("Enter your username: ");
@@ -84,10 +84,18 @@ public class ChessClient {
         String password = scanner.nextLine();
 
         UserData user = new UserData(username, password, null);
-        var authData = server.signIn(user);
-        authToken = authData.authToken();
-        state = State.SIGNEDIN;
-        return String.format("You signed in as %s.", username);
+
+        try {
+            var authData = server.signIn(user);
+
+            state = State.SIGNEDIN;
+            authToken = authData.authToken();
+
+            return String.format("You signed in as %s.\n", authData.username());
+
+        } catch (ResponseException ex) {
+            return "Login failed: incorrect username or password.\n";
+        }
     }
 
     public String register() throws ResponseException {
@@ -109,20 +117,26 @@ public class ChessClient {
         return String.format("You signed in as %s.", username);
     }
 
-    private String logout() {
+    private String logout() throws ResponseException {
+        server.logout(authToken);
+        state = State.SIGNEDOUT;
+        return "You signed out" + "\n" + " Welcome to the Chess Server. Register or sign in to start.";
+    }
+
+    private String createGame() {
+        return null;
+    }
+
+    private String listGames() {
+        return null;
+    }
+
+    private String playGame() {
         return null;
     }
 
     private String observeGame() {
-    }
-
-    private String playGame() {
-    }
-
-    private String listGames() {
-    }
-
-    private String createGame() {
+        return null;
     }
 
     public String help() {

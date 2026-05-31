@@ -9,6 +9,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Map;
 
 
 public class ServerFacade {
@@ -36,13 +37,25 @@ public class ServerFacade {
 
     private <T> T handleResponse(HttpResponse<String> response, Class<T> responseClass) throws ResponseException {
         var status = response.statusCode();
+
         if (!isSuccessful(status)) {
+            String message = "Error: HTTP " + status;
+
             var body = response.body();
-            if (body != null) {
-                throw ResponseException.fromJson(body);
+            if (body != null && !body.isBlank()) {
+                try {
+                    var error = new Gson().fromJson(body, java.util.Map.class);
+                    Object errorMessage = error.get("message");
+
+                    if (errorMessage != null) {
+                        message = errorMessage.toString();
+                    }
+                } catch (Exception ignored) {
+                    message = body;
+                }
             }
 
-            throw new ResponseException(ResponseException.fromHttpStatusCode(status), "other failure: " + status);
+            throw new ResponseException(ResponseException.Code.ServerError, message);
         }
 
         if (responseClass != null) {
@@ -51,6 +64,7 @@ public class ServerFacade {
 
         return null;
     }
+
 
     private HttpResponse<String> sendRequest(HttpRequest request) throws ResponseException {
         try {
@@ -74,5 +88,10 @@ public class ServerFacade {
         var request = buildRequest("POST", "/user", user);
         var response = sendRequest(request);
         return handleResponse(response, AuthData.class);
+    }
+
+    public void logout(String authToken) throws ResponseException {
+        var request = buildRequest("DELETE", "/user", authToken);
+        sendRequest(request);
     }
 }
