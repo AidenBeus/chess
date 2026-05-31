@@ -13,6 +13,7 @@ import static ui.EscapeSequences.SET_TEXT_COLOR_GREEN;
 public class ChessClient {
     private final ServerFacade server;
     private State state = State.SIGNEDOUT;
+    private String authToken;
 
     public ChessClient(String serverUrl) {
         server = new ServerFacade(serverUrl);
@@ -27,7 +28,6 @@ public class ChessClient {
         while (!result.equals("quit")) {
             printPrompt();
             String line = scanner.nextLine();
-            line = line.toLowerCase();
             try {
                 result = eval(line);
                 System.out.print(SET_TEXT_COLOR_BLUE + result);
@@ -44,48 +44,108 @@ public class ChessClient {
     public String eval(String input) {
         try {
             String[] tokens = input.toLowerCase().split(" ");
-            String cmd = (tokens.length > 0) ? tokens[0] : "help";
+            String cmd = (tokens.length > 0) ? tokens[0].toLowerCase() : "help";
             String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
-            return switch (cmd) {
-                case "signin" -> signIn(params);
-                case "rescue" -> rescuePet(params);
-                case "list" -> listPets();
-                case "signout" -> signOut();
-                case "adopt" -> adoptPet(params);
-                case "adoptall" -> adoptAllPets();
-                case "quit" -> "quit";
-                default -> help();
-            };
+            if (state == State.SIGNEDOUT) {
+                return switch (cmd) {
+                    case "quit" -> "quit";
+                    case "signin" -> signIn();
+                    case "register" -> register();
+                    default -> help();
+                };
+            }
+            else if (state == State.SIGNEDIN){
+                return switch (cmd) {
+                    case "logout" -> logout();
+                    case "creategame" -> createGame();
+                    case "listgames" -> listGames();
+                    case "playgame" -> playGame();
+                    case "observegame" -> observeGame();
+                    case "quit" -> "quit";
+                    default -> help();
+                };
+            }
+            else{
+                return "How did you get here in eval?";
+            }
         } catch (ResponseException ex) {
             return ex.getMessage();
         }
     }
 
-    public String signIn(String... params) throws ResponseException {
+
+    public String signIn() throws ResponseException {
         Scanner scanner = new Scanner(System.in);
+
         System.out.print("Enter your username: ");
         String username = scanner.nextLine();
+
         System.out.print("Enter your password: ");
         String password = scanner.nextLine();
+
         UserData user = new UserData(username, password, null);
-        server.signIn(user);
+        var authData = server.signIn(user);
+        authToken = authData.authToken();
+        state = State.SIGNEDIN;
         return String.format("You signed in as %s.", username);
+    }
+
+    public String register() throws ResponseException {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter your username: ");
+        String username = scanner.nextLine();
+
+        System.out.print("Enter your password: ");
+        String password = scanner.nextLine();
+
+        System.out.print("Enter your email: ");
+        String email = scanner.nextLine();
+
+        UserData user = new UserData(username, password, email);
+        var authData = server.register(user);
+        authToken = authData.authToken();
+        state = State.SIGNEDIN;
+        return String.format("You signed in as %s.", username);
+    }
+
+    private String logout() {
+        return null;
+    }
+
+    private String observeGame() {
+    }
+
+    private String playGame() {
+    }
+
+    private String listGames() {
+    }
+
+    private String createGame() {
     }
 
     public String help() {
         if (state == State.SIGNEDOUT) {
             return """
-                    - signIn <yourname>
+                    - signin
+                    - register
+                    - help
                     - quit
                     """;
         }
-        return """
-                - list
-                - adopt <pet id>
-                - rescue <name> <CAT|DOG|FROG|FISH>
-                - adoptAll
-                - signOut
-                - quit
-                """;
+        if (state == State.SIGNEDIN) {
+            return """
+                    - help
+                    - logout
+                    - creategame
+                    - listgames
+                    - playgame <id> <color>
+                    - observegame <id>
+                    """;
+        }
+        else{
+            return "How did you get here?";
+        }
     }
 }

@@ -2,6 +2,7 @@ package ui;
 
 import chess.ResponseException;
 import com.google.gson.Gson;
+import model.AuthData;
 import model.UserData;
 
 import java.net.URI;
@@ -63,9 +64,15 @@ public class ServerFacade {
         return status / 100 == 2;
     }
 
-    public String signIn(UserData user) throws ResponseException {
+    public AuthData signIn(UserData user) throws ResponseException {
         var request = buildRequest("POST", "/session", user);
         var response = sendRequest(request);
-        return null;
+        return handleResponse(response, AuthData.class);
+    }
+
+    public AuthData register(UserData user) throws ResponseException {
+        var request = buildRequest("POST", "/user", user);
+        var response = sendRequest(request);
+        return handleResponse(response, AuthData.class);
     }
 }
