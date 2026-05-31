@@ -3,14 +3,13 @@ package ui;
 import chess.ResponseException;
 import com.google.gson.Gson;
 import model.AuthData;
+import model.GameData;
 import model.UserData;
 
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.Map;
-
 
 public class ServerFacade {
     private final HttpClient client = HttpClient.newHttpClient();
@@ -39,7 +38,7 @@ public class ServerFacade {
         var status = response.statusCode();
 
         if (!isSuccessful(status)) {
-            String message = "Error: HTTP " + status;
+            String message = "Error: HTTP " + status + " body: " + response.body();
 
             var body = response.body();
             if (body != null && !body.isBlank()) {
@@ -91,7 +90,21 @@ public class ServerFacade {
     }
 
     public void logout(String authToken) throws ResponseException {
-        var request = buildRequest("DELETE", "/user", authToken);
+        var request = buildRequest("DELETE", "/session", authToken);
         sendRequest(request);
+    }
+
+    public GameData createGame(String authToken, String gameName) throws ResponseException {
+        GameData gameRequest = new GameData(null, null, null, gameName, null);
+
+        var request = HttpRequest.newBuilder()
+                .uri(URI.create(serverUrl + "/game"))
+                .header("Content-Type", "application/json")
+                .header("authorization", authToken)
+                .POST(makeRequestBody(gameRequest))
+                .build();
+
+        var response = sendRequest(request);
+        return handleResponse(response, GameData.class);
     }
 }

@@ -123,8 +123,14 @@ public class ChessClient {
         return "You signed out" + "\n" + " Welcome to the Chess Server. Register or sign in to start.";
     }
 
-    private String createGame() {
-        return null;
+    private String createGame() throws ResponseException {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter your desired game name: ");
+        String gameName = scanner.nextLine();
+        var game = server.createGame(authToken, gameName);
+
+        return String.format("Created game '%s' with ID %d.\n", game.gameName(), game.gameID());
     }
 
     private String listGames() {
