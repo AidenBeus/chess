@@ -2,6 +2,7 @@ package ui;
 
 import chess.ResponseException;
 import com.google.gson.Gson;
+import model.UserData;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -17,21 +18,21 @@ public class ServerFacade {
     }
 
     private HttpRequest buildRequest(String method, String path, Object body) {
-        var request = HttpRequest.newBuilder()
-                .uri(URI.create(serverUrl + path))
-                .method(method, makeRequestBody(body));
+        var request = HttpRequest.newBuilder() .uri(URI.create(serverUrl + path)) .method(method, makeRequestBody(body));
         if (body != null) {
             request.setHeader("Content-Type", "application/json");
         }
         return request.build();
     }
+
     private HttpRequest.BodyPublisher makeRequestBody(Object request) {
-        if (request != null) {
-            return HttpRequest.BodyPublishers.ofString(new Gson().toJson(request));
-        } else {
+        if (request != null) { return HttpRequest.BodyPublishers.ofString(new Gson().toJson(request));
+        }
+        else {
             return HttpRequest.BodyPublishers.noBody();
         }
     }
+
     private <T> T handleResponse(HttpResponse<String> response, Class<T> responseClass) throws ResponseException {
         var status = response.statusCode();
         if (!isSuccessful(status)) {
@@ -50,7 +51,21 @@ public class ServerFacade {
         return null;
     }
 
+    private HttpResponse<String> sendRequest(HttpRequest request) throws ResponseException {
+        try {
+            return client.send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (Exception ex) {
+            throw new ResponseException(ResponseException.Code.ServerError, ex.getMessage());
+        }
+    }
+
     private boolean isSuccessful(int status) {
         return status / 100 == 2;
+    }
+
+    public String signIn(UserData user) throws ResponseException {
+        var request = buildRequest("POST", "/session", user);
+        var response = sendRequest(request);
+        return null;
     }
 }

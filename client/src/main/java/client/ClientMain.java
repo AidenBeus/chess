@@ -9,7 +9,7 @@ public class ClientMain {
 
         String serverUrl = "http://localhost:8080";
         try {
-            ChessClient.createChessClient((serverUrl).run());
+            new ChessClient(serverUrl).run();
 
         } catch (Throwable ex) {
             System.out.printf("Unable to start server: %s%n", ex.getMessage());
