@@ -3,6 +3,7 @@ package ui;
 import chess.ResponseException;
 import com.google.gson.Gson;
 import model.AuthData;
+import model.ChessList;
 import model.GameData;
 import model.UserData;
 
@@ -106,5 +107,15 @@ public class ServerFacade {
 
         var response = sendRequest(request);
         return handleResponse(response, GameData.class);
+    }
+
+    public ChessList listGames(String authToken) throws ResponseException {
+        var request = HttpRequest.newBuilder()
+                .uri(URI.create(serverUrl + "/game"))
+                .header("authorization", authToken)
+                .GET()
+                .build();
+        var response = sendRequest(request);
+        return handleResponse(response, ChessList.class);
     }
 }

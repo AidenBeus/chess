@@ -133,8 +133,26 @@ public class ChessClient {
         return String.format("Created game '%s' with ID %d.\n", game.gameName(), game.gameID());
     }
 
-    private String listGames() {
-        return null;
+    private String listGames() throws ResponseException {
+        var chessList = server.listGames(authToken);
+
+        if (chessList.games() == null || chessList.games().isEmpty()) {
+            return "No games found.\n";
+        }
+
+        StringBuilder result = new StringBuilder();
+
+        for (var game : chessList.games()) {
+            result.append(String.format(
+                    "ID: %d | Name: %s | White: %s | Black: %s%n",
+                    game.gameID(),
+                    game.gameName(),
+                    game.whiteUsername() == null ? "empty" : game.whiteUsername(),
+                    game.blackUsername() == null ? "empty" : game.blackUsername()
+            ));
+        }
+
+        return result.toString();
     }
 
     private String playGame() {
