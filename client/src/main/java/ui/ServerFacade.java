@@ -2,10 +2,7 @@ package ui;
 
 import chess.ResponseException;
 import com.google.gson.Gson;
-import model.AuthData;
-import model.ChessList;
-import model.GameData;
-import model.UserData;
+import model.*;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -118,4 +115,19 @@ public class ServerFacade {
         var response = sendRequest(request);
         return handleResponse(response, ChessList.class);
     }
+
+    public void joinGame(String authToken, String playerColor, int gameID) throws ResponseException {
+        var requestBody = new JoinGameRequest(playerColor, gameID);
+
+        var request = HttpRequest.newBuilder()
+                .uri(URI.create(serverUrl + "/game"))
+                .header("Content-Type", "application/json")
+                .header("authorization", authToken)
+                .PUT(makeRequestBody(requestBody))
+                .build();
+
+        var response = sendRequest(request);
+        handleResponse(response, null);
+    }
+
 }

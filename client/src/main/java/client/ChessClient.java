@@ -1,10 +1,13 @@
 package client;
 
 import chess.ResponseException;
+import model.GameData;
 import model.UserData;
 import ui.ServerFacade;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 import static ui.EscapeSequences.SET_TEXT_COLOR_BLUE;
@@ -14,6 +17,7 @@ public class ChessClient {
     private final ServerFacade server;
     private State state = State.SIGNEDOUT;
     private String authToken;
+    private final List<GameData> listedGames = new ArrayList<>();
 
     public ChessClient(String serverUrl) {
         server = new ServerFacade(serverUrl);
@@ -66,7 +70,11 @@ public class ChessClient {
                 };
             }
             else{
-                return "How did you get here in eval?";
+                return switch (cmd) {
+                    case"ssdsd" -> observeGame();
+                    case "quit" -> "quit";
+                    default -> "valid commands\n" + help();
+                };
             }
         } catch (ResponseException ex) {
             return ex.getMessage();
@@ -136,16 +144,21 @@ public class ChessClient {
     private String listGames() throws ResponseException {
         var chessList = server.listGames(authToken);
 
+        listedGames.clear();
+
         if (chessList.games() == null || chessList.games().isEmpty()) {
             return "No games found.\n";
         }
 
+        listedGames.addAll(chessList.games());
+
         StringBuilder result = new StringBuilder();
 
-        for (var game : chessList.games()) {
+        int number = 1;
+        for (var game : listedGames) {
             result.append(String.format(
-                    "ID: %d | Name: %s | White: %s | Black: %s%n",
-                    game.gameID(),
+                    "%d. Name: %s | White: %s | Black: %s%n",
+                    number++,
                     game.gameName(),
                     game.whiteUsername() == null ? "empty" : game.whiteUsername(),
                     game.blackUsername() == null ? "empty" : game.blackUsername()
@@ -155,8 +168,50 @@ public class ChessClient {
         return result.toString();
     }
 
-    private String playGame() {
-        return null;
+    private String playGame() throws ResponseException {
+        if (listedGames.isEmpty()) {
+            return "Use the command listgames to populate the list or create a game\n";
+        }
+
+        Scanner scanner = new Scanner(System.in);
+
+        String gameNumberText;
+        String color;
+
+        System.out.print("Enter game number: ");
+        gameNumberText = scanner.nextLine();
+
+        System.out.print("Enter color WHITE or BLACK: ");
+        color = scanner.nextLine();
+
+        int gameNumber;
+        try {
+            gameNumber = Integer.parseInt(gameNumberText);
+        } catch (NumberFormatException e) {
+            return "Invalid game number. Please enter a number from listgames.\n";
+        }
+
+        if (gameNumber < 1 || gameNumber > listedGames.size()) {
+            return "Invalid game number. Please choose a number from listgames.\n";
+        }
+
+        color = color.toUpperCase();
+
+        if (!color.equals("WHITE") && !color.equals("BLACK")) {
+            return "Invalid color. Please enter WHITE or BLACK.\n";
+        }
+
+        GameData selectedGame = listedGames.get(gameNumber - 1);
+
+        server.joinGame(authToken, color, selectedGame.gameID());
+
+        state = State.INGAME;
+
+        return String.format(
+                "Joined game '%s' as %s.\n",
+                selectedGame.gameName(),
+                color
+        );
     }
 
     private String observeGame() {
@@ -183,7 +238,10 @@ public class ChessClient {
                     """;
         }
         else{
-            return "How did you get here?";
+            return """
+                    - help
+                    - quit
+                    """;
         }
     }
 }
