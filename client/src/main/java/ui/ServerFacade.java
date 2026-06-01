@@ -88,8 +88,14 @@ public class ServerFacade {
     }
 
     public void logout(String authToken) throws ResponseException {
-        var request = buildRequest("DELETE", "/session", authToken);
-        sendRequest(request);
+        var request = HttpRequest.newBuilder()
+                .uri(URI.create(serverUrl + "/session"))
+                .header("authorization", authToken)
+                .DELETE()
+                .build();
+
+        var response = sendRequest(request);
+        handleResponse(response, null);
     }
 
     public GameData createGame(String authToken, String gameName) throws ResponseException {
