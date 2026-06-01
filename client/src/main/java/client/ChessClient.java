@@ -10,8 +10,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
-import static ui.EscapeSequences.SET_TEXT_COLOR_BLUE;
-import static ui.EscapeSequences.SET_TEXT_COLOR_GREEN;
+import static ui.EscapeSequences.*;
+import chess.ChessBoard;
+import chess.ChessGame;
+import chess.ChessPiece;
+import chess.ChessPosition;
 
 public class ChessClient {
     private final ServerFacade server;
@@ -71,7 +74,7 @@ public class ChessClient {
             }
             else{
                 return switch (cmd) {
-                    case"ssdsd" -> observeGame();
+                    case "leave" -> leaveGame();
                     case "quit" -> "quit";
                     default -> "valid commands\n" + help();
                 };
@@ -170,7 +173,7 @@ public class ChessClient {
 
     private String playGame() throws ResponseException {
         if (listedGames.isEmpty()) {
-            return "Use the command listgames to populate the list or create a game\n";
+            return "Use the command listgames to populate the list and/or create a game\n";
         }
 
         Scanner scanner = new Scanner(System.in);
@@ -206,6 +209,7 @@ public class ChessClient {
         server.joinGame(authToken, color, selectedGame.gameID());
 
         state = State.INGAME;
+        drawBoard(color);
 
         return String.format(
                 "Joined game '%s' as %s.\n",
@@ -216,7 +220,7 @@ public class ChessClient {
 
     private String observeGame() {
         if (listedGames.isEmpty()) {
-            return "Please run listgames first so I know which game numbers are available.\n";
+            return "Use the command listgames to populate the list and/or create a game\n";
         }
 
         Scanner scanner = new Scanner(System.in);
@@ -238,13 +242,110 @@ public class ChessClient {
         }
 
         GameData selectedGame = listedGames.get(gameNumber - 1);
-
+        state = State.INGAME;
+        drawBoard("WHITE");
         return String.format(
                 "Observing game '%s'.\n",
                 selectedGame.gameName()
         );
     }
 
+    private void drawBoard(String color) {
+        ChessGame game = new ChessGame();
+        ChessBoard board = game.getBoard();
+
+        boolean whitePerspective = color.equalsIgnoreCase("WHITE");
+
+        String[] columns = whitePerspective
+                ? new String[]{"a", "b", "c", "d", "e", "f", "g", "h"}
+                : new String[]{"h", "g", "f", "e", "d", "c", "b", "a"};
+
+        int[] rows = whitePerspective
+                ? new int[]{8, 7, 6, 5, 4, 3, 2, 1}
+                : new int[]{1, 2, 3, 4, 5, 6, 7, 8};
+
+        System.out.print(ERASE_SCREEN);
+
+        printColumnLabels(columns);
+
+        for (int row : rows) {
+            printLabelCell(String.valueOf(row));
+
+            for (String columnName : columns) {
+                int col = columnName.charAt(0) - 'a' + 1;
+
+                boolean lightSquare = (row + col) % 2 != 0;
+                System.out.print(lightSquare ? SET_BG_COLOR_LIGHT_GREY : SET_BG_COLOR_BLACK);
+
+                ChessPiece piece = board.getPiece(new ChessPosition(row, col));
+                System.out.print(pieceToString(piece));
+            }
+
+            printLabelCell(String.valueOf(row));
+            System.out.println();
+        }
+
+        printColumnLabels(columns);
+
+        System.out.print(RESET_BG_COLOR);
+        System.out.print(RESET_TEXT_COLOR);
+    }
+
+    private void printColumnLabels(String[] columns) {
+        System.out.print(SET_BG_COLOR_DARK_GREY);
+        System.out.print("  ");
+
+        for (String column : columns) {
+            printLabelCell(column);
+        }
+
+        System.out.print("    ");
+        System.out.println();
+
+        System.out.print(RESET_BG_COLOR);
+        System.out.print(RESET_TEXT_COLOR);
+    }
+
+    private void printLabelCell(String label) {
+        System.out.print(SET_BG_COLOR_DARK_GREY);
+        System.out.print(SET_TEXT_COLOR_MAGENTA);
+        System.out.print("  " + label + " ");
+    }
+
+    private String pieceToString(ChessPiece piece) {
+        if (piece == null) {
+            return EMPTY;
+        }
+
+        if (piece.getTeamColor() == ChessGame.TeamColor.WHITE) {
+            System.out.print(SET_TEXT_COLOR_RED);
+
+            return switch (piece.getPieceType()) {
+                case KING -> WHITE_KING;
+                case QUEEN -> WHITE_QUEEN;
+                case BISHOP -> WHITE_BISHOP;
+                case KNIGHT -> WHITE_KNIGHT;
+                case ROOK -> WHITE_ROOK;
+                case PAWN -> WHITE_PAWN;
+            };
+        } else {
+            System.out.print(SET_TEXT_COLOR_BLUE);
+
+            return switch (piece.getPieceType()) {
+                case KING -> BLACK_KING;
+                case QUEEN -> BLACK_QUEEN;
+                case BISHOP -> BLACK_BISHOP;
+                case KNIGHT -> BLACK_KNIGHT;
+                case ROOK -> BLACK_ROOK;
+                case PAWN -> BLACK_PAWN;
+            };
+        }
+    }
+
+    public String leaveGame(){
+        state = State.SIGNEDIN;
+        return "You have left the game";
+    }
     public String help() {
         if (state == State.SIGNEDOUT) {
             return """
@@ -267,6 +368,7 @@ public class ChessClient {
         else{
             return """
                     - help
+                    - leave
                     - quit
                     """;
         }
