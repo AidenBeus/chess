@@ -53,7 +53,7 @@ public class ChessClient {
             if (state == State.SIGNEDOUT) {
                 return switch (cmd) {
                     case "quit" -> "quit";
-                    case "signin" -> signIn();
+                    case "login" -> signIn();
                     case "register" -> register();
                     default -> "valid commands\n" + help();
                 };
@@ -215,13 +215,40 @@ public class ChessClient {
     }
 
     private String observeGame() {
-        return null;
+        if (listedGames.isEmpty()) {
+            return "Please run listgames first so I know which game numbers are available.\n";
+        }
+
+        Scanner scanner = new Scanner(System.in);
+
+        String gameNumberText;
+
+        System.out.print("Enter game number: ");
+        gameNumberText = scanner.nextLine();
+
+        int gameNumber;
+        try {
+            gameNumber = Integer.parseInt(gameNumberText);
+        } catch (NumberFormatException e) {
+            return "Invalid game number. Please enter a number from listgames.\n";
+        }
+
+        if (gameNumber < 1 || gameNumber > listedGames.size()) {
+            return "Invalid game number. Please choose a number from listgames.\n";
+        }
+
+        GameData selectedGame = listedGames.get(gameNumber - 1);
+
+        return String.format(
+                "Observing game '%s'.\n",
+                selectedGame.gameName()
+        );
     }
 
     public String help() {
         if (state == State.SIGNEDOUT) {
             return """
-                    - signin
+                    - login
                     - register
                     - help
                     - quit
@@ -233,8 +260,8 @@ public class ChessClient {
                     - logout
                     - creategame
                     - listgames
-                    - playgame <id> <color>
-                    - observegame <id>
+                    - playgame 
+                    - observegame 
                     """;
         }
         else{
