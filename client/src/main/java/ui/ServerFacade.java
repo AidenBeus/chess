@@ -52,7 +52,7 @@ public class ServerFacade {
                 }
             }
 
-            throw new ResponseException(ResponseException.Code.ServerError, message);
+            throw new ResponseException(message);
         }
 
         if (responseClass != null) {
@@ -67,7 +67,7 @@ public class ServerFacade {
         try {
             return client.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (Exception ex) {
-            throw new ResponseException(ResponseException.Code.ServerError, ex.getMessage());
+            throw new ResponseException(ex.getMessage());
         }
     }
 
