@@ -53,7 +53,6 @@ public class ChessClient {
         try {
             String[] tokens = input.toLowerCase().split(" ");
             String cmd = (tokens.length > 0) ? tokens[0].toLowerCase() : "help";
-            String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
             if (state == State.SIGNEDOUT) {
                 return switch (cmd) {
                     case "quit" -> "quit";
@@ -73,13 +72,20 @@ public class ChessClient {
                     default -> "valid commands\n" + help();
                 };
             }
-            else{
+            else if (state == State.INGAME){
                 return switch (cmd) {
                     case "leave" -> leaveGame();
                     case "redrawchessboard" -> redraw();
 //                    case "makemove" -> makeMove();
 //                    case "resign" -> resign();
 //                    case "highlightlegalmoves" -> highlightLegalMoves();
+                    case "quit" -> "quit";
+                    default -> "valid commands\n" + help();
+                };
+            }
+            else{
+                return switch (cmd){
+                    case "leave" -> leaveGame();
                     case "quit" -> "quit";
                     default -> "valid commands\n" + help();
                 };
@@ -373,13 +379,20 @@ public class ChessClient {
                     - observegame 
                     """;
         }
-        else{
+        if (state == State.INGAME){
             return """
                     - help
                     - redrawchessboard
                     - makemove
                     - resign
                     - highlightlegalmoves
+                    - leave
+                    - quit
+                    """;
+        }
+        else{
+            return """
+                    - help
                     - leave
                     - quit
                     """;
