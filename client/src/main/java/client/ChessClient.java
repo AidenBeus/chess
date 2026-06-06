@@ -75,6 +75,10 @@ public class ChessClient {
             else{
                 return switch (cmd) {
                     case "leave" -> leaveGame();
+                    case "redrawchessboard" -> redraw();
+                    case "makemove" -> makeMove();
+                    case "resign" -> resign();
+                    case "highlightlegalmoves" -> highlightLegalMoves();
                     case "quit" -> "quit";
                     default -> "valid commands\n" + help();
                 };
@@ -368,6 +372,10 @@ public class ChessClient {
         else{
             return """
                     - help
+                    - redrawchessbaord
+                    - makemove
+                    - resign
+                    - highlightlegalmoves
                     - leave
                     - quit
                     """;
