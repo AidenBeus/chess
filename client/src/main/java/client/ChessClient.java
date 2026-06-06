@@ -21,6 +21,7 @@ public class ChessClient {
     private State state = State.SIGNEDOUT;
     private String authToken;
     private final List<GameData> listedGames = new ArrayList<>();
+    private String color;
 
     public ChessClient(String serverUrl) {
         server = new ServerFacade(serverUrl);
@@ -86,6 +87,10 @@ public class ChessClient {
         } catch (ResponseException ex) {
             return ex.getMessage();
         }
+    }
+
+    private void redraw() {
+        drawBoard(color);
     }
 
 
@@ -183,8 +188,6 @@ public class ChessClient {
         Scanner scanner = new Scanner(System.in);
 
         String gameNumberText;
-        String color;
-
         System.out.print("Enter game number: ");
         gameNumberText = scanner.nextLine();
 
@@ -365,7 +368,7 @@ public class ChessClient {
                     - logout
                     - creategame
                     - listgames
-                    - playgame 
+                    - playgame
                     - observegame 
                     """;
         }
