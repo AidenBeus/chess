@@ -141,7 +141,7 @@ public class ChessClient {
         String gameName = scanner.nextLine();
         var game = server.createGame(authToken, gameName);
 
-        return String.format("Created game '%s' with ID %d.\n", game.gameName(), game.gameID());
+        return String.format("Created game '%s'.\n", game.gameName());
     }
 
     private String listGames() throws ResponseException {
