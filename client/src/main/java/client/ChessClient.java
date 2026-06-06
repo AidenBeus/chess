@@ -21,7 +21,7 @@ public class ChessClient {
     private State state = State.SIGNEDOUT;
     private String authToken;
     private final List<GameData> listedGames = new ArrayList<>();
-    private String color;
+    private String color = "WHITE";
 
     public ChessClient(String serverUrl) {
         server = new ServerFacade(serverUrl);
@@ -77,9 +77,9 @@ public class ChessClient {
                 return switch (cmd) {
                     case "leave" -> leaveGame();
                     case "redrawchessboard" -> redraw();
-                    case "makemove" -> makeMove();
-                    case "resign" -> resign();
-                    case "highlightlegalmoves" -> highlightLegalMoves();
+//                    case "makemove" -> makeMove();
+//                    case "resign" -> resign();
+//                    case "highlightlegalmoves" -> highlightLegalMoves();
                     case "quit" -> "quit";
                     default -> "valid commands\n" + help();
                 };
@@ -89,8 +89,9 @@ public class ChessClient {
         }
     }
 
-    private void redraw() {
+    private String redraw() {
         drawBoard(color);
+        return "Board Redrawn";
     }
 
 
@@ -375,7 +376,7 @@ public class ChessClient {
         else{
             return """
                     - help
-                    - redrawchessbaord
+                    - redrawchessboard
                     - makemove
                     - resign
                     - highlightlegalmoves
