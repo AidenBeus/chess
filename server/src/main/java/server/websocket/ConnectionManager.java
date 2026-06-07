@@ -23,6 +23,7 @@ public class ConnectionManager {
     private final Gson gson = new Gson();
 
     private final Map<Integer, Set<Connection>> connectionsByGame = new HashMap<>();
+    private final Set<Integer> resignedGames = new HashSet<>();
 
     public ConnectionManager(ChessService service) {
         this.service = service;
@@ -72,16 +73,8 @@ public class ConnectionManager {
                 sendError(rootSession, "Error: invalid auth token or game id");
                 return;
             }
-            if (gameData.game().isInCheckmate(ChessGame.TeamColor.WHITE)){
-                sendError(rootSession, "Game is over. White is checkmated");
-                return;
-            }
-            if (gameData.game().isInCheckmate(ChessGame.TeamColor.BLACK)){
-                sendError(rootSession, "Game is over. Black is checkmated");
-                return;
-            }
-            if (gameData.game().isInStalemate(ChessGame.TeamColor.WHITE) || gameData.game().isInStalemate(ChessGame.TeamColor.BLACK)){
-                sendError(rootSession, "Game is over because of a stalemate");
+            if (gameData.isGameOver()) {
+                sendError(rootSession, "Error: game is over");
                 return;
             }
 
@@ -193,6 +186,11 @@ public class ConnectionManager {
                 return;
             }
 
+            if (gameData.isGameOver()) {
+                removeConnection(command.getGameID(), auth.username());
+                return;
+            }
+
             Connection connection = findConnection(command.getGameID(), auth.username());
             if (connection == null) {
                 sendError(session, "Error: not connected to this game");
@@ -248,7 +246,46 @@ public class ConnectionManager {
     }
 
     public void resign(Session session, UserGameCommand command) {
-        // implement later
+        try {
+            AuthData auth = service.getAuth(command.getAuthToken());
+            GameData gameData = service.getGame(command.getGameID());
+
+            if (auth == null || gameData == null) {
+                sendError(session, "Error: invalid auth token or game id");
+                return;
+            }
+
+            if (gameData.isGameOver()) {
+                sendError(session, "Error: game is over");
+                return;
+            }
+
+            Connection connection = findConnection(command.getGameID(), auth.username());
+            if (connection == null) {
+                sendError(session, "Error: you are not connected to this game");
+                return;
+            }
+
+            if ("OBSERVER".equals(connection.role())) {
+                sendError(session, "Error: observers cannot resign");
+                return;
+            }
+
+            GameData updatedGame = new GameData(
+                    gameData.gameID(),
+                    gameData.whiteUsername(),
+                    gameData.blackUsername(),
+                    gameData.gameName(),
+                    gameData.game(),
+                    true
+            );
+            service.updateGame(updatedGame);
+            resignedGames.add(command.getGameID());
+            broadcastAll(command.getGameID(), auth.username() + " resigned the game");
+
+        } catch (Exception e) {
+            sendError(session, "Error: " + e);
+        }
     }
 
     private void sendLoadGame(Session session, ChessGame game) {
@@ -355,6 +392,15 @@ public class ConnectionManager {
         }
         set.removeIf(c -> c.username().equals(username));
     }
+
+    private boolean isGameResigned(Integer gameId) {
+        return resignedGames.contains(gameId);
+    }
+
+    private boolean gameIsOver(int gameId) {
+        return resignedGames.contains(gameId);
+    }
+
     private record Connection(
             Session session,
             int gameId,

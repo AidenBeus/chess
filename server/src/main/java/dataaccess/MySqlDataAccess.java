@@ -26,8 +26,7 @@ public class MySqlDataAccess implements DataAccess{
     public ChessList listGames() throws DataAccessException {
         var games = new ArrayList<GameData>();
 
-        var statement = "SELECT id, whiteUsername, blackUsername, gameName, chessGame FROM games";
-
+        var statement =  "SELECT id, whiteUsername, blackUsername, gameName, chessGame, gameOver FROM games";
         try (var conn = DatabaseManager.getConnection();
              var ps = conn.prepareStatement(statement);
              var rs = ps.executeQuery()) {
@@ -43,7 +42,8 @@ public class MySqlDataAccess implements DataAccess{
                         rs.getString("whiteUsername"),
                         rs.getString("blackUsername"),
                         rs.getString("gameName"),
-                        chessGame
+                        chessGame,
+                        rs.getBoolean("gameOver")
                 ));
             }
 
@@ -143,7 +143,9 @@ public class MySqlDataAccess implements DataAccess{
     }
 
     public GameData createGame(String gameName) throws DataAccessException {
-        var statement = "INSERT INTO games (whiteUsername, blackUsername, gameName, chessGame)VALUES (?, ?, ?, ?)";
+        var statement =
+                "INSERT INTO games (whiteUsername, blackUsername, gameName, chessGame, gameOver) VALUES (?, ?, ?, ?, ?)";
+
         try (var conn = DatabaseManager.getConnection();
              var ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
 
@@ -151,6 +153,7 @@ public class MySqlDataAccess implements DataAccess{
             ps.setNull(2, Types.VARCHAR);
             ps.setString(3, gameName);
             ps.setString(4, new Gson().toJson(new ChessGame()));
+            ps.setBoolean(5, false);
 
             ps.executeUpdate();
 
@@ -161,7 +164,8 @@ public class MySqlDataAccess implements DataAccess{
                             null,
                             null,
                             gameName,
-                            new ChessGame()
+                            new ChessGame(),
+                            false
                     );
                 }
             }
@@ -203,7 +207,8 @@ public class MySqlDataAccess implements DataAccess{
 
     public GameData getGame(int gameId) throws DataAccessException {
         try (Connection conn = DatabaseManager.getConnection()) {
-            var statement = "SELECT id, whiteUsername, blackUsername, gameName, chessGame FROM games WHERE id = ?";
+            var statement =
+                    "SELECT id, whiteUsername, blackUsername, gameName, chessGame, gameOver FROM games WHERE id = ?";
             try (PreparedStatement ps = conn.prepareStatement(statement)) {
                 ps.setInt(1, gameId);
 
@@ -219,7 +224,8 @@ public class MySqlDataAccess implements DataAccess{
                                 rs.getString("whiteUsername"),
                                 rs.getString("blackUsername"),
                                 rs.getString("gameName"),
-                                chessGame
+                                chessGame,
+                                rs.getBoolean("gameOver")
                         );
                     }
                 }
@@ -261,7 +267,8 @@ public class MySqlDataAccess implements DataAccess{
                 SET whiteUsername = ?,
                     blackUsername = ?,
                     gameName = ?,
-                    chessGame = ?
+                    chessGame = ?,
+                    gameOver = ?
                 WHERE id = ?
                 """;
 
@@ -272,7 +279,8 @@ public class MySqlDataAccess implements DataAccess{
             ps.setString(2, game.blackUsername());
             ps.setString(3, game.gameName());
             ps.setString(4, new Gson().toJson(game.game()));
-            ps.setInt(5, game.gameID());
+            ps.setBoolean(5, game.over());
+            ps.setInt(6, game.gameID());
 
             ps.executeUpdate();
 

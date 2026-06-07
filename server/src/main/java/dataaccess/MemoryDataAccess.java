@@ -10,17 +10,17 @@ import org.mindrot.jbcrypt.BCrypt;
 import java.util.HashMap;
 import java.util.Objects;
 
-public class MemoryDataAccess implements DataAccess{
+public class MemoryDataAccess implements DataAccess {
     final private HashMap<Integer, GameData> games = new HashMap<>();
     final private HashMap<String, UserData> users = new HashMap<>();
     final private HashMap<String, AuthData> authTokens = new HashMap<>();
     private int nextId = 1;
 
-    public ChessList listGames(){
+    public ChessList listGames() {
         return new ChessList(games.values());
     }
 
-    public AuthData register(UserData user) throws AlreadyTakenException{
+    public AuthData register(UserData user) throws AlreadyTakenException {
         String hashedPassword = BCrypt.hashpw(user.password(), BCrypt.gensalt());
         users.put(user.username(), new UserData(user.username(), hashedPassword, user.email()));
         AuthData auth = AuthData.generateToken(user.username());
@@ -28,7 +28,7 @@ public class MemoryDataAccess implements DataAccess{
         return auth;
     }
 
-    public UserData getUser(String username){
+    public UserData getUser(String username) {
         return users.get(username);
     }
 
@@ -46,22 +46,21 @@ public class MemoryDataAccess implements DataAccess{
         return authTokens.get(authToken);
     }
 
-    public GameData createGame(String gameName){
-        GameData game = new GameData(nextId, null, null, gameName, new ChessGame());
+    public GameData createGame(String gameName) {
+        GameData game = new GameData(nextId, null, null, gameName, new ChessGame(), false);
         games.put(nextId++, game);
         return game;
     }
 
-    public void joinGame(String playerColor, String username, int gameId){
+    public void joinGame(String playerColor, String username, int gameId) {
         GameData game = games.get(gameId);
-        if (Objects.equals(playerColor, "WHITE")){
+        if (Objects.equals(playerColor, "WHITE")) {
             games.replace(gameId, game.changeWhite(username));
-        }
-        else{
+        } else {
             games.replace(gameId, game.changeBlack(username));
-
         }
     }
+
 
     public GameData getGame(int gameId) throws DataAccessException {
         return games.get(gameId);

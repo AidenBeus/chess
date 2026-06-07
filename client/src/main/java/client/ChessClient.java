@@ -86,7 +86,7 @@ public class ChessClient {
                     case "leave" -> leaveGame();
                     case "redrawchessboard" -> redraw();
                     case "makemove" -> makeMove();
-//                    case "resign" -> resign();
+                    case "resign" -> resign();
 //                    case "highlightlegalmoves" -> highlightLegalMoves();
                     case "quit" -> "quit";
                     default -> "valid commands\n" + help();
@@ -105,6 +105,21 @@ public class ChessClient {
         } catch (IOException | URISyntaxException | DeploymentException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String resign() throws IOException {
+        if (ws == null || currentGameId == null) {
+            return "You are not currently connected to a game.\n";
+        }
+
+        UserGameCommand resign =
+                new UserGameCommand(
+                        UserGameCommand.CommandType.RESIGN,
+                        authToken,
+                        currentGameId);
+
+        ws.sendCommand(gson.toJson(resign));
+        return "You resigned the game";
     }
 
     private String makeMove() throws IOException {
