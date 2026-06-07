@@ -28,10 +28,6 @@ public record GameData(
         return new GameData(gameID, whiteUsername, username, gameName, game, over);
     }
 
-    public GameData withGameOver(boolean gameOver) {
-        return new GameData(gameID, whiteUsername, blackUsername, gameName, game, gameOver);
-    }
-
     public boolean isGameOver() {
         return Boolean.TRUE.equals(over);
     }

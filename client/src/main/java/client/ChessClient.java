@@ -29,6 +29,7 @@ public class ChessClient {
     private WebSocketFacade ws;
     private final Gson gson = new Gson();
     private volatile ChessGame currentGameState = new ChessGame();
+    private final BoardRenderer boardRenderer = new BoardRenderer();
     public ChessClient(String serverUrl) {
         server = new ServerFacade(serverUrl);
     }
@@ -129,17 +130,6 @@ public class ChessClient {
             return "No piece at that square.\n";
         }
 
-        if (state == State.INGAME) {
-            ChessGame.TeamColor playerColor =
-                    color.equalsIgnoreCase("WHITE")
-                            ? ChessGame.TeamColor.WHITE
-                            : ChessGame.TeamColor.BLACK;
-
-            if (piece.getTeamColor() != playerColor) {
-                return "Not your piece.\n";
-            }
-        }
-
         Set<ChessPosition> highlights = new HashSet<>();
         var legalMoves = currentGameState.validMoves(start);
         if (legalMoves != null) {
@@ -148,7 +138,7 @@ public class ChessClient {
             }
         }
 
-        drawBoard(color, highlights);
+        boardRenderer.render(currentGameState, color, highlights, SET_BG_COLOR_GREEN);
         return "Highlighted legal moves.\n";
     }
 
@@ -228,7 +218,34 @@ public class ChessClient {
                 return "Not your piece.\n";
             }
 
-            ChessMove move = new ChessMove(start, end, null);
+            ChessPiece.PieceType promotion = null;
+
+            if (piece.getPieceType() == ChessPiece.PieceType.PAWN) {
+
+                boolean promotingWhite =
+                        piece.getTeamColor() == ChessGame.TeamColor.WHITE &&
+                                end.getRow() == 8;
+
+                boolean promotingBlack =
+                        piece.getTeamColor() == ChessGame.TeamColor.BLACK &&
+                                end.getRow() == 1;
+
+                if (promotingWhite || promotingBlack) {
+
+                    System.out.print("Promote to (Q,R,B,N): ");
+                    String choice = scanner.nextLine().trim().toUpperCase();
+
+                    promotion = switch (choice) {
+                        case "Q" -> ChessPiece.PieceType.QUEEN;
+                        case "R" -> ChessPiece.PieceType.ROOK;
+                        case "B" -> ChessPiece.PieceType.BISHOP;
+                        case "N" -> ChessPiece.PieceType.KNIGHT;
+                        default -> ChessPiece.PieceType.QUEEN;
+                    };
+                }
+            }
+
+            ChessMove move = new ChessMove(start, end, promotion);
 
             var legalMoves = game.validMoves(start);
 
@@ -270,7 +287,7 @@ public class ChessClient {
     }
 
     private String redraw() {
-        drawBoard(color);
+        boardRenderer.render(currentGameState, color);
         return "Board Redrawn";
     }
 
@@ -442,108 +459,6 @@ public class ChessClient {
         );
     }
 
-    private void drawBoard(String color) {
-        drawBoard(color, Set.of());
-    }
-
-    private void drawBoard(String color, Set<ChessPosition> highlights) {
-        ChessBoard board = currentGameState.getBoard();
-
-        boolean whitePerspective = color.equalsIgnoreCase("WHITE");
-
-        String[] columns = whitePerspective
-                ? new String[]{"a", "b", "c", "d", "e", "f", "g", "h"}
-                : new String[]{"h", "g", "f", "e", "d", "c", "b", "a"};
-
-        int[] rows = whitePerspective
-                ? new int[]{8, 7, 6, 5, 4, 3, 2, 1}
-                : new int[]{1, 2, 3, 4, 5, 6, 7, 8};
-
-        System.out.print(ERASE_SCREEN);
-
-        printColumnLabels(columns);
-
-        for (int row : rows) {
-            printLabelCell(String.valueOf(row));
-
-            for (String columnName : columns) {
-                int col = columnName.charAt(0) - 'a' + 1;
-                ChessPosition pos = new ChessPosition(row, col);
-
-                boolean lightSquare = (row + col) % 2 != 0;
-                boolean highlighted = highlights.contains(pos);
-
-                if (highlighted) {
-                    System.out.print(SET_BG_COLOR_GREEN);
-                } else {
-                    System.out.print(lightSquare ? SET_BG_COLOR_LIGHT_GREY : SET_BG_COLOR_BLACK);
-                }
-
-                ChessPiece piece = board.getPiece(pos);
-                System.out.print(pieceToString(piece));
-            }
-
-            printLabelCell(String.valueOf(row));
-            System.out.println();
-        }
-
-        printColumnLabels(columns);
-
-        System.out.print(RESET_BG_COLOR);
-        System.out.print(RESET_TEXT_COLOR);
-    }
-
-    private void printColumnLabels(String[] columns) {
-        System.out.print(SET_BG_COLOR_DARK_GREY);
-        System.out.print("  ");
-
-        for (String column : columns) {
-            printLabelCell(column);
-        }
-
-        System.out.print("    ");
-        System.out.println();
-
-        System.out.print(RESET_BG_COLOR);
-        System.out.print(RESET_TEXT_COLOR);
-    }
-
-    private void printLabelCell(String label) {
-        System.out.print(SET_BG_COLOR_DARK_GREY);
-        System.out.print(SET_TEXT_COLOR_MAGENTA);
-        System.out.print("  " + label + " ");
-    }
-
-    private String pieceToString(ChessPiece piece) {
-        if (piece == null) {
-            return EMPTY;
-        }
-
-        if (piece.getTeamColor() == ChessGame.TeamColor.WHITE) {
-            System.out.print(SET_TEXT_COLOR_RED);
-
-            return switch (piece.getPieceType()) {
-                case KING -> WHITE_KING;
-                case QUEEN -> WHITE_QUEEN;
-                case BISHOP -> WHITE_BISHOP;
-                case KNIGHT -> WHITE_KNIGHT;
-                case ROOK -> WHITE_ROOK;
-                case PAWN -> WHITE_PAWN;
-            };
-        } else {
-            System.out.print(SET_TEXT_COLOR_BLUE);
-
-            return switch (piece.getPieceType()) {
-                case KING -> BLACK_KING;
-                case QUEEN -> BLACK_QUEEN;
-                case BISHOP -> BLACK_BISHOP;
-                case KNIGHT -> BLACK_KNIGHT;
-                case ROOK -> BLACK_ROOK;
-                case PAWN -> BLACK_PAWN;
-            };
-        }
-    }
-
     public String leaveGame() throws IOException {
         if (ws == null || currentGameId == null) {
             return "You are not currently connected to a game.\n";
@@ -605,10 +520,9 @@ public class ChessClient {
                     """;
         }
     }
-    private void connectWebSocket() throws IOException, DeploymentException, URISyntaxException {
+    private void connectWebSocket() throws IOException, DeploymentException {
         ClientManager client = ClientManager.createClient();
         ws = new WebSocketFacade(this);
-
         client.connectToServer(
                 ws,
                 ClientEndpointConfig.Builder.create().build(),
@@ -625,7 +539,7 @@ public class ChessClient {
     }
     public void handleLoadGame(ChessGame game) {
         currentGameState = game;
-        drawBoard(color);
+        boardRenderer.render(currentGameState, color);
     }
 
     public void handleNotification(String message) {

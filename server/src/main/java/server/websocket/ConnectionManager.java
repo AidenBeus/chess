@@ -83,11 +83,6 @@ public class ConnectionManager {
                 return;
             }
 
-            if ("OBSERVER".equals(mover.role())) {
-                sendError(rootSession, "Error: observers cannot make moves");
-                return;
-            }
-
             ChessGame game = gameData.game();
             ChessGame.TeamColor moverColor =
                     mover.role().equals("WHITE")
@@ -141,14 +136,8 @@ public class ConnectionManager {
                     game
             );
 
-            System.out.println("before updateGame");
             service.updateGame(updatedGame);
-            System.out.println("after updateGame");
-
-            System.out.println("before broadcastGame");
             broadcastGame(gameData.gameID(), game);
-            System.out.println("after broadcastGame");
-
             String moveText = auth.username() + " moved from "
                     + squareName(move.getStartPosition()) + " to "
                     + squareName(move.getEndPosition());
@@ -167,7 +156,6 @@ public class ConnectionManager {
             } else if (game.isInCheck(opponent)) {
                 broadcastAll(gameData.gameID(), opponent + " is in check");
             }
-
         } catch (Exception e) {
             System.out.println("MAKE MOVE FAILED");
             e.printStackTrace();
@@ -317,7 +305,7 @@ public class ConnectionManager {
 
     private void broadcastGame(Integer gameId, ChessGame game) {
         Set<Connection> set = connectionsByGame.get(gameId);
-        if (set == null) return;
+        if (set == null){return;}
 
         String json = gson.toJson(new LoadGameMessage(game));
         Set<Connection> dead = new HashSet<>();
@@ -331,13 +319,12 @@ public class ConnectionManager {
                 dead.add(c);
             }
         }
-
         set.removeAll(dead);
     }
 
     private void broadcastAll(Integer gameId, String message) {
         Set<Connection> set = connectionsByGame.get(gameId);
-        if (set == null) return;
+        if (set == null) {return;}
 
         String json = gson.toJson(new NotificationMessage(message));
         Set<Connection> dead = new HashSet<>();
@@ -351,13 +338,12 @@ public class ConnectionManager {
                 dead.add(c);
             }
         }
-
         set.removeAll(dead);
     }
 
     private void broadcastExcept(Integer gameId, String message, Connection except) {
         Set<Connection> set = connectionsByGame.get(gameId);
-        if (set == null) return;
+        if (set == null){return;}
 
         String json = gson.toJson(new NotificationMessage(message));
         Set<Connection> dead = new HashSet<>();
@@ -374,7 +360,6 @@ public class ConnectionManager {
                 dead.add(c);
             }
         }
-
         set.removeAll(dead);
     }
 
