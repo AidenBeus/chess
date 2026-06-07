@@ -146,7 +146,6 @@ public class ChessClient {
         if (ws == null || currentGameId == null) {
             return "You are not currently connected to a game.\n";
         }
-
         UserGameCommand resign =
                 new UserGameCommand(
                         UserGameCommand.CommandType.RESIGN,
@@ -161,45 +160,32 @@ public class ChessClient {
         if (ws == null || currentGameId == null) {
             return "You are not currently connected to a game.\n";
         }
-
         Scanner scanner = new Scanner(System.in);
-
         try {
             System.out.print("Piece location: ");
             String input = scanner.nextLine().trim();
-
             if (input.length() != 2) {
                 return "Input must be in format like a1";
             }
-
             ChessPosition start = getPosition(input);
-
             if (start.getRow() < 1 || start.getRow() > 8 || start.getColumn() == -999) {
                 return "Invalid position";
             }
-
             System.out.print("Move piece to: ");
             input = scanner.nextLine().trim();
-
             if (input.length() != 2) {
                 return "Input must be in format like a1";
             }
-
             ChessPosition end = getPosition(input);
-
             if (end.getRow() < 1 || end.getRow() > 8 || end.getColumn() == -999) {
                 return "Invalid position";
             }
-
             ChessGame game = currentGameState;
-
             ChessPiece piece = game.getBoard().getPiece(start);
-
             ChessGame.TeamColor playerColor =
                     color.equalsIgnoreCase("WHITE")
                             ? ChessGame.TeamColor.WHITE
                             : ChessGame.TeamColor.BLACK;
-
             if (game.getTeamTurn() != playerColor) {
                 return "It is not your turn\n";
             }
@@ -217,7 +203,6 @@ public class ChessClient {
                     piece.getTeamColor() != ChessGame.TeamColor.BLACK) {
                 return "Not your piece.\n";
             }
-
             ChessPiece.PieceType promotion = null;
 
             if (piece.getPieceType() == ChessPiece.PieceType.PAWN) {
@@ -246,13 +231,10 @@ public class ChessClient {
             }
 
             ChessMove move = new ChessMove(start, end, promotion);
-
             var legalMoves = game.validMoves(start);
-
             if (legalMoves == null || !legalMoves.contains(move)) {
                 return "Illegal move.\n";
             }
-
             MakeMoveCommand command =
                     new MakeMoveCommand(
                             authToken,
@@ -267,7 +249,6 @@ public class ChessClient {
             return "Error: " + e.getMessage();
         }
     }
-
     private ChessPosition getPosition(String input) {
         String letter = String.valueOf(input.charAt(0)).toLowerCase();
         int row = Character.getNumericValue(input.charAt(1));
@@ -302,68 +283,50 @@ public class ChessClient {
         String password = scanner.nextLine();
 
         UserData user = new UserData(username, password, null);
-
         try {
             var authData = server.signIn(user);
-
             state = State.SIGNEDIN;
             authToken = authData.authToken();
-
             return String.format("You signed in as %s.\n", authData.username());
-
         } catch (ResponseException ex) {
             return "Login failed: incorrect username or password.\n";
         }
     }
-
     public String register() throws ResponseException {
         Scanner scanner = new Scanner(System.in);
-
         System.out.print("Enter your username: ");
         String username = scanner.nextLine();
-
         System.out.print("Enter your password: ");
         String password = scanner.nextLine();
-
         System.out.print("Enter your email: ");
         String email = scanner.nextLine();
-
         UserData user = new UserData(username, password, email);
         var authData = server.register(user);
         authToken = authData.authToken();
         state = State.SIGNEDIN;
         return String.format("You signed in as %s.", username);
     }
-
     private String logout() throws ResponseException {
         server.logout(authToken);
         state = State.SIGNEDOUT;
         return "You signed out" + "\n" + " Welcome to the Chess Server. Register or sign in to start.";
     }
-
     private String createGame() throws ResponseException {
         Scanner scanner = new Scanner(System.in);
-
         System.out.print("Enter your desired game name: ");
         String gameName = scanner.nextLine();
         var game = server.createGame(authToken, gameName);
 
         return String.format("Created game '%s'.\n", game.gameName());
     }
-
     private String listGames() throws ResponseException {
         var chessList = server.listGames(authToken);
-
         listedGames.clear();
-
         if (chessList.games() == null || chessList.games().isEmpty()) {
             return "No games found.\n";
         }
-
         listedGames.addAll(chessList.games());
-
         StringBuilder result = new StringBuilder();
-
         int number = 1;
         for (var game : listedGames) {
             result.append(String.format(
@@ -374,44 +337,33 @@ public class ChessClient {
                     game.blackUsername() == null ? "empty" : game.blackUsername()
             ));
         }
-
         return result.toString();
     }
-
     private String playGame() throws ResponseException, DeploymentException, IOException, URISyntaxException {
         if (listedGames.isEmpty()) {
             return "Use the command listgames to populate the list and/or create a game\n";
         }
-
         Scanner scanner = new Scanner(System.in);
-
         String gameNumberText;
         System.out.print("Enter game number: ");
         gameNumberText = scanner.nextLine();
-
         System.out.print("Enter color WHITE or BLACK: ");
         color = scanner.nextLine();
-
         int gameNumber;
         try {
             gameNumber = Integer.parseInt(gameNumberText);
         } catch (NumberFormatException e) {
             return "Invalid game number. Please enter a number from listgames.\n";
         }
-
         if (gameNumber < 1 || gameNumber > listedGames.size()) {
             return "Invalid game number. Please choose a number from listgames.\n";
         }
-
         color = color.toUpperCase();
-
         if (!color.equals("WHITE") && !color.equals("BLACK")) {
             return "Invalid color. Please enter WHITE or BLACK.\n";
         }
-
         GameData selectedGame = listedGames.get(gameNumber - 1);
         currentGameId = selectedGame.gameID();
-
         server.joinGame(authToken, color, selectedGame.gameID());
         connectWebSocket();
         sendConnectCommand();
@@ -423,30 +375,23 @@ public class ChessClient {
                 color
         );
     }
-
     private String observeGame() throws DeploymentException, IOException, URISyntaxException {
         if (listedGames.isEmpty()) {
             return "Use the command listgames to populate the list and/or create a game\n";
         }
-
         Scanner scanner = new Scanner(System.in);
-
         String gameNumberText;
-
         System.out.print("Enter game number: ");
         gameNumberText = scanner.nextLine();
-
         int gameNumber;
         try {
             gameNumber = Integer.parseInt(gameNumberText);
         } catch (NumberFormatException e) {
             return "Invalid game number. Please enter a number from listgames.\n";
         }
-
         if (gameNumber < 1 || gameNumber > listedGames.size()) {
             return "Invalid game number. Please choose a number from listgames.\n";
         }
-
         GameData selectedGame = listedGames.get(gameNumber - 1);
         currentGameId = selectedGame.gameID();
         state = State.OBSERVE;
@@ -458,18 +403,15 @@ public class ChessClient {
                 selectedGame.gameName()
         );
     }
-
     public String leaveGame() throws IOException {
         if (ws == null || currentGameId == null) {
             return "You are not currently connected to a game.\n";
         }
-
         UserGameCommand leave =
                 new UserGameCommand(
                         UserGameCommand.CommandType.LEAVE,
                         authToken,
                         currentGameId);
-
         ws.sendCommand(gson.toJson(leave));
         ws.close();
         ws = null;
@@ -479,7 +421,6 @@ public class ChessClient {
 
         return "You have left the game";
     }
-
     public String help() {
         if (state == State.SIGNEDOUT) {
             return """
@@ -541,12 +482,10 @@ public class ChessClient {
         currentGameState = game;
         boardRenderer.render(currentGameState, color);
     }
-
     public void handleNotification(String message) {
         System.out.println("\nNotification: " + message);
         printPrompt();
     }
-
     public void handleError(String message) {
         System.out.println("\nError: " + message);
         printPrompt();

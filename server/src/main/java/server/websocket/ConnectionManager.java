@@ -293,7 +293,7 @@ public class ConnectionManager {
 
     private Connection findConnection(Integer gameId, String username) {
         Set<Connection> set = connectionsByGame.get(gameId);
-        if (set == null) return null;
+        if (set == null) {return null;}
 
         for (Connection c : set) {
             if (c.username().equals(username)) {
