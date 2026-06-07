@@ -29,13 +29,12 @@ public class WebSocketHandler {
                 case CONNECT -> connections.connect(
                         base.getAuthToken(),
                         base.getGameID(),
-                        ctx.session,
-                        ctx::send
+                        ctx.session
                 );
 
                 case MAKE_MOVE -> {
                     MakeMoveCommand moveCommand = gson.fromJson(ctx.message(), MakeMoveCommand.class);
-                    connections.makeMove(moveCommand, ctx::send);
+                    connections.makeMove(moveCommand, ctx.session);
                 }
 
                 case LEAVE -> connections.leave(ctx.session, base);

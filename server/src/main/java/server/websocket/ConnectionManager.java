@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import dataaccess.DataAccessException;
 import model.AuthData;
 import model.GameData;
+import org.eclipse.jetty.websocket.api.Session;
 import service.ChessService;
 import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
@@ -13,10 +14,9 @@ import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
-import java.util.function.Consumer;
 
 public class ConnectionManager {
     private final ChessService service;
@@ -28,13 +28,13 @@ public class ConnectionManager {
         this.service = service;
     }
 
-    public void connect(String authToken, Integer gameId, Object sessionKey, Consumer<String> send)
+    public void connect(String authToken, Integer gameId, Session session)
             throws DataAccessException {
         AuthData auth = service.getAuth(authToken);
         GameData game = service.getGame(gameId);
 
         if (auth == null || game == null) {
-            sendError(send, "Error: invalid auth token or game id");
+            sendError(session, "Error: invalid auth token or game id");
             return;
         }
 
@@ -44,42 +44,37 @@ public class ConnectionManager {
                         username.equals(game.blackUsername()) ? "BLACK" :
                                 "OBSERVER";
 
-        Connection connection = new Connection(sessionKey, gameId, username, role, send);
+        Connection connection = new Connection(session, gameId, username, role);
         connectionsByGame.computeIfAbsent(gameId, k -> new HashSet<>()).add(connection);
 
-        sendLoadGame(send, game.game());
+        sendLoadGame(session, game.game());
         broadcastExcept(gameId, username + " connected as " + role.toLowerCase(), connection);
     }
 
-    public void cleanup(Object sessionKey) {
+    public void cleanup(Session session) {
         for (Set<Connection> connections : connectionsByGame.values()) {
-            connections.removeIf(c -> c.sessionKey().equals(sessionKey));
+            connections.removeIf(c -> c.session().equals(session));
         }
     }
 
-    private void sendLoadGame(Consumer<String> send, ChessGame game) {
-        LoadGameMessage msg = new LoadGameMessage(game);
-        send.accept(gson.toJson(msg));
-    }
-
-    public void makeMove(MakeMoveCommand command, Consumer<String> rootSend) {
+    public void makeMove(MakeMoveCommand command, Session rootSession) {
         try {
             AuthData auth = service.getAuth(command.getAuthToken());
             GameData gameData = service.getGame(command.getGameID());
 
             if (auth == null || gameData == null) {
-                sendError(rootSend, "Error: invalid auth token or game id");
+                sendError(rootSession, "Error: invalid auth token or game id");
                 return;
             }
 
             Connection mover = findConnection(command.getGameID(), auth.username());
             if (mover == null) {
-                sendError(rootSend, "Error: you are not connected to this game");
+                sendError(rootSession, "Error: you are not connected to this game");
                 return;
             }
 
             if ("OBSERVER".equals(mover.role())) {
-                sendError(rootSend, "Error: observers cannot make moves");
+                sendError(rootSession, "Error: observers cannot make moves");
                 return;
             }
 
@@ -90,30 +85,30 @@ public class ConnectionManager {
                             : ChessGame.TeamColor.BLACK;
 
             if (game.getTeamTurn() != moverColor) {
-                sendError(rootSend, "Error: it is not your turn");
+                sendError(rootSession, "Error: it is not your turn");
                 return;
             }
 
             ChessMove move = command.getMove();
             if (move == null) {
-                sendError(rootSend, "Error: missing move");
+                sendError(rootSession, "Error: missing move");
                 return;
             }
 
             ChessPiece piece = game.getBoard().getPiece(move.getStartPosition());
             if (piece == null) {
-                sendError(rootSend, "Error: no piece at the starting square");
+                sendError(rootSession, "Error: no piece at the starting square");
                 return;
             }
 
             if (piece.getTeamColor() != moverColor) {
-                sendError(rootSend, "Error: you can only move your own pieces");
+                sendError(rootSession, "Error: you can only move your own pieces");
                 return;
             }
 
             var legalMoves = game.validMoves(move.getStartPosition());
             if (legalMoves == null || !legalMoves.contains(move)) {
-                sendError(rootSend, "Error: invalid move");
+                sendError(rootSession, "Error: invalid move");
                 return;
             }
 
@@ -128,8 +123,6 @@ public class ConnectionManager {
             );
 
             service.updateGame(updatedGame);
-            GameData verify = service.getGame(gameData.gameID());
-            System.out.println("VERIFY AFTER UPDATE: " + verify.game());
 
             broadcastGame(gameData.gameID(), game);
 
@@ -153,21 +146,33 @@ public class ConnectionManager {
             }
 
         } catch (Exception e) {
-            sendError(rootSend, "Error: " + e.getMessage());
+            sendError(rootSession, "Error: " + e.getMessage());
         }
     }
 
-    public void leave(Object session, UserGameCommand command) {
+    public void leave(Session session, UserGameCommand command) {
         // implement later
     }
 
-    public void resign(Object session, UserGameCommand command) {
+    public void resign(Session session, UserGameCommand command) {
         // implement later
     }
 
-    private void sendError(Consumer<String> send, String text) {
-        ErrorMessage msg = new ErrorMessage(text);
-        send.accept(gson.toJson(msg));
+    private void sendLoadGame(Session session, ChessGame game) {
+        try {
+            session.getRemote().sendString(gson.toJson(new LoadGameMessage(game)));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void sendError(Session session, String text) {
+        try {
+            ErrorMessage msg = new ErrorMessage(text);
+            session.getRemote().sendString(gson.toJson(msg));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private Connection findConnection(Integer gameId, String username) {
@@ -191,7 +196,7 @@ public class ConnectionManager {
 
         for (Connection c : set) {
             try {
-                c.send().accept(json);
+                c.session().getRemote().sendString(json);
             } catch (Exception e) {
                 dead.add(c);
             }
@@ -209,7 +214,7 @@ public class ConnectionManager {
 
         for (Connection c : set) {
             try {
-                c.send().accept(json);
+                c.session().getRemote().sendString(json);
             } catch (Exception e) {
                 dead.add(c);
             }
@@ -219,30 +224,35 @@ public class ConnectionManager {
     }
 
     private void broadcastExcept(Integer gameId, String message, Connection except) {
-        Set<Connection> recipients = new HashSet<>(connectionsByGame.getOrDefault(gameId, Set.of()));
+        Set<Connection> set = connectionsByGame.get(gameId);
+        if (set == null) return;
 
-        NotificationMessage msg = new NotificationMessage(message);
-        String json = gson.toJson(msg);
+        String json = gson.toJson(new NotificationMessage(message));
+        Set<Connection> dead = new HashSet<>();
 
-        for (Connection c : recipients) {
-            if (!c.sessionKey().equals(except.sessionKey())) {
-                try {
-                    c.send().accept(json);
-                } catch (Exception ignored) {
-                }
+        for (Connection c : set) {
+            if (c.equals(except)) {
+                continue;
+            }
+            try {
+                c.session().getRemote().sendString(json);
+            } catch (Exception e) {
+                dead.add(c);
             }
         }
+
+        set.removeAll(dead);
     }
 
     private String squareName(ChessPosition pos) {
         char file = (char) ('a' + pos.getColumn() - 1);
         return "" + file + pos.getRow();
     }
+
     private record Connection(
-            Object sessionKey,
+            Session session,
             int gameId,
             String username,
-            String role,
-            Consumer<String> send
+            String role
     ) {}
 }
