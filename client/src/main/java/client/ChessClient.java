@@ -108,41 +108,77 @@ public class ChessClient {
     }
 
     private String makeMove() throws IOException {
-        if (ws == null || currentGameId == null){
+        if (ws == null || currentGameId == null) {
             return "You are not currently connected to a game.\n";
         }
+
         Scanner scanner = new Scanner(System.in);
 
         try {
             System.out.print("Piece location: ");
             String input = scanner.nextLine().trim();
-            if (input.length() !=2){
+
+            if (input.length() != 2) {
                 return "Input must be in format like a1";
             }
+
             ChessPosition start = getPosition(input);
+
             if (start.getRow() < 1 || start.getRow() > 8 || start.getColumn() == -999) {
-                return "Input must be in format like a1";
+                return "Invalid position";
             }
 
             System.out.print("Move piece to: ");
             input = scanner.nextLine().trim();
-            if (input.length() !=2){
+
+            if (input.length() != 2) {
                 return "Input must be in format like a1";
             }
+
             ChessPosition end = getPosition(input);
+
             if (end.getRow() < 1 || end.getRow() > 8 || end.getColumn() == -999) {
                 return "Invalid position";
             }
+
+            ChessGame game = currentGameState;
+
+            ChessPiece piece = game.getBoard().getPiece(start);
+
+            if (piece == null) {
+                return "No piece at that square.\n";
+            }
+
+            if (color.equalsIgnoreCase("WHITE") &&
+                    piece.getTeamColor() != ChessGame.TeamColor.WHITE) {
+                return "Not your piece.\n";
+            }
+
+            if (color.equalsIgnoreCase("BLACK") &&
+                    piece.getTeamColor() != ChessGame.TeamColor.BLACK) {
+                return "Not your piece.\n";
+            }
+
             ChessMove move = new ChessMove(start, end, null);
+
+            var legalMoves = game.validMoves(start);
+
+            if (legalMoves == null || !legalMoves.contains(move)) {
+                return "Illegal move.\n";
+            }
+
             MakeMoveCommand command =
                     new MakeMoveCommand(
                             authToken,
                             currentGameId,
                             move
                     );
+
             ws.sendCommand(gson.toJson(command));
-            return "Move submitted";
-        } catch(Exception e){
+
+            return "Move sent to server.\n";
+
+        } catch (Exception e) {
             return "Error: " + e.getMessage();
         }
     }
@@ -500,6 +536,10 @@ public class ChessClient {
         ws.sendCommand(gson.toJson(command));
     }
     public void handleLoadGame(ChessGame game) {
+        System.out.println("Turn: " + game.getTeamTurn());
+        System.out.println("e2 piece: " +
+                game.getBoard().getPiece(new ChessPosition(2,5)));
+
         currentGameState = game;
         drawBoard(color);
     }

@@ -28,36 +28,31 @@ public class WebSocketFacade extends Endpoint {
     }
 
     private void handleMessage(String message) {
+        try {
+            System.out.println("WS RECEIVED: " + message);
 
-        ServerMessage base =
-                gson.fromJson(message, ServerMessage.class);
-
-        switch (base.getServerMessageType()) {
-
-            case LOAD_GAME -> {
-                LoadGameMessage load =
-                        gson.fromJson(message, LoadGameMessage.class);
-
-                client.handleLoadGame(load.getGame());
+            ServerMessage base = gson.fromJson(message, ServerMessage.class);
+            if (base == null || base.getServerMessageType() == null) {
+                System.out.println("Unknown websocket message: " + message);
+                return;
             }
 
-            case NOTIFICATION -> {
-                NotificationMessage notification =
-                        gson.fromJson(message, NotificationMessage.class);
-
-                client.handleNotification(
-                        notification.getMessage()
-                );
+            switch (base.getServerMessageType()) {
+                case LOAD_GAME -> {
+                    LoadGameMessage load = gson.fromJson(message, LoadGameMessage.class);
+                    client.handleLoadGame(load.getGame());
+                }
+                case NOTIFICATION -> {
+                    NotificationMessage notification = gson.fromJson(message, NotificationMessage.class);
+                    client.handleNotification(notification.getMessage());
+                }
+                case ERROR -> {
+                    ErrorMessage error = gson.fromJson(message, ErrorMessage.class);
+                    client.handleError(error.getErrorMessage());
+                }
             }
-
-            case ERROR -> {
-                ErrorMessage error =
-                        gson.fromJson(message, ErrorMessage.class);
-
-                client.handleError(
-                        error.getErrorMessage()
-                );
-            }
+        } catch (Exception e) {
+            System.out.println("WebSocket message handling failed: " + e.getMessage());
         }
     }
 

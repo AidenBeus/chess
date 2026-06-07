@@ -28,7 +28,7 @@ public class ConnectionManager {
         this.service = service;
     }
 
-    public void connect(String authToken, Integer gameId, Consumer<String> send)
+    public void connect(String authToken, Integer gameId, Object sessionKey, Consumer<String> send)
             throws DataAccessException {
         AuthData auth = service.getAuth(authToken);
         GameData game = service.getGame(gameId);
@@ -44,31 +44,16 @@ public class ConnectionManager {
                         username.equals(game.blackUsername()) ? "BLACK" :
                                 "OBSERVER";
 
-        Connection connection = new Connection(gameId, username, role, send);
+        Connection connection = new Connection(sessionKey, gameId, username, role, send);
         connectionsByGame.computeIfAbsent(gameId, k -> new HashSet<>()).add(connection);
 
         sendLoadGame(send, game.game());
-        broadcastExcept(gameId,
-                username + " connected as " + role.toLowerCase(),
-                connection);
+        broadcastExcept(gameId, username + " connected as " + role.toLowerCase(), connection);
     }
 
     public void cleanup(Object sessionKey) {
         for (Set<Connection> connections : connectionsByGame.values()) {
-            connections.removeIf(c -> c.equals(sessionKey));
-        }
-    }
-
-    private void broadcastExcept(Integer gameId, String message, Connection except) {
-        Set<Connection> recipients = new HashSet<>(connectionsByGame.getOrDefault(gameId, Set.of()));
-
-        NotificationMessage msg = new NotificationMessage(message);
-        String json = gson.toJson(msg);
-
-        for (Connection c : recipients) {
-            if (!c.equals(except)) {
-                c.send().accept(json);
-            }
+            connections.removeIf(c -> c.sessionKey().equals(sessionKey));
         }
     }
 
@@ -126,12 +111,14 @@ public class ConnectionManager {
                 return;
             }
 
-            if (!game.validMoves(move.getStartPosition()).contains(move)) {
+            var legalMoves = game.validMoves(move.getStartPosition());
+            if (legalMoves == null || !legalMoves.contains(move)) {
                 sendError(rootSend, "Error: invalid move");
                 return;
             }
 
             game.makeMove(move);
+
             GameData updatedGame = new GameData(
                     gameData.gameID(),
                     gameData.whiteUsername(),
@@ -139,6 +126,7 @@ public class ConnectionManager {
                     gameData.gameName(),
                     game
             );
+
             service.updateGame(updatedGame);
 
             broadcastGame(gameData.gameID(), game);
@@ -162,10 +150,8 @@ public class ConnectionManager {
                 broadcastAll(gameData.gameID(), opponent + " is in check");
             }
 
-        } catch (DataAccessException e) {
+        } catch (Exception e) {
             sendError(rootSend, "Error: " + e.getMessage());
-        } catch (InvalidMoveException e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -199,9 +185,17 @@ public class ConnectionManager {
         if (set == null) return;
 
         String json = gson.toJson(new LoadGameMessage(game));
+        Set<Connection> dead = new HashSet<>();
+
         for (Connection c : set) {
-            c.send().accept(json);
+            try {
+                c.send().accept(json);
+            } catch (Exception e) {
+                dead.add(c);
+            }
         }
+
+        set.removeAll(dead);
     }
 
     private void broadcastAll(Integer gameId, String message) {
@@ -209,8 +203,32 @@ public class ConnectionManager {
         if (set == null) return;
 
         String json = gson.toJson(new NotificationMessage(message));
+        Set<Connection> dead = new HashSet<>();
+
         for (Connection c : set) {
-            c.send().accept(json);
+            try {
+                c.send().accept(json);
+            } catch (Exception e) {
+                dead.add(c);
+            }
+        }
+
+        set.removeAll(dead);
+    }
+
+    private void broadcastExcept(Integer gameId, String message, Connection except) {
+        Set<Connection> recipients = new HashSet<>(connectionsByGame.getOrDefault(gameId, Set.of()));
+
+        NotificationMessage msg = new NotificationMessage(message);
+        String json = gson.toJson(msg);
+
+        for (Connection c : recipients) {
+            if (!c.sessionKey().equals(except.sessionKey())) {
+                try {
+                    c.send().accept(json);
+                } catch (Exception ignored) {
+                }
+            }
         }
     }
 
@@ -219,6 +237,7 @@ public class ConnectionManager {
         return "" + file + pos.getRow();
     }
     private record Connection(
+            Object sessionKey,
             int gameId,
             String username,
             String role,

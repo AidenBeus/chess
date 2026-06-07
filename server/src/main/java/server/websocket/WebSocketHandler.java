@@ -29,6 +29,7 @@ public class WebSocketHandler {
                 case CONNECT -> connections.connect(
                         base.getAuthToken(),
                         base.getGameID(),
+                        ctx.session,
                         ctx::send
                 );
 
