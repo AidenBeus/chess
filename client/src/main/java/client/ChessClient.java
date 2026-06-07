@@ -2,12 +2,17 @@ package client;
 
 import chess.*;
 import com.google.gson.Gson;
+import jakarta.websocket.ClientEndpointConfig;
+import jakarta.websocket.DeploymentException;
 import model.GameData;
 import model.UserData;
+import org.glassfish.tyrus.client.ClientManager;
 import ui.ServerFacade;
 import websocket.commands.UserGameCommand;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -320,6 +325,7 @@ public class ChessClient {
         GameData selectedGame = listedGames.get(gameNumber - 1);
         state = State.INGAME;
         drawBoard("WHITE");
+
         return String.format(
                 "Observing game '%s'.\n",
                 selectedGame.gameName()
@@ -459,5 +465,15 @@ public class ChessClient {
                     - quit
                     """;
         }
+    }
+    private void connectWebSocket() throws IOException, DeploymentException, URISyntaxException {
+        ClientManager client = ClientManager.createClient();
+        ws = new WebSocketFacade();
+
+        client.connectToServer(
+                ws,
+                ClientEndpointConfig.Builder.create().build(),
+                URI.create("ws://localhost:8080/ws")
+        );
     }
 }
