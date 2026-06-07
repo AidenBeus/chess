@@ -8,6 +8,7 @@ import model.GameData;
 import model.UserData;
 import org.glassfish.tyrus.client.ClientManager;
 import ui.ServerFacade;
+import ui.WebSocketFacade;
 import websocket.commands.UserGameCommand;
 
 import java.io.IOException;
@@ -505,10 +506,12 @@ public class ChessClient {
     }
 
     public void handleNotification(String message) {
-        System.out.println(message);
+        System.out.println("\nNotification: " + message);
+        printPrompt();
     }
 
     public void handleError(String message) {
-        System.out.println("Error: " + message);
+        System.out.println("\nError: " + message);
+        printPrompt();
     }
 }
