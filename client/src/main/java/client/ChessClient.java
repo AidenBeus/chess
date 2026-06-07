@@ -90,7 +90,8 @@ public class ChessClient {
                 };
             }
             else{
-                return switch (cmd){
+                return switch (cmd){  //This is the observe state
+                    case "redrawchessboard" -> redraw();
                     case "leave" -> leaveGame();
                     case "quit" -> "quit";
                     default -> "valid commands\n" + help();
@@ -323,9 +324,10 @@ public class ChessClient {
         }
 
         GameData selectedGame = listedGames.get(gameNumber - 1);
-        state = State.INGAME;
-        drawBoard("WHITE");
-
+        state = State.OBSERVE;
+        color = "WHITE";
+        drawBoard(color);
+        currentGameId = selectedGame.gameID();
         return String.format(
                 "Observing game '%s'.\n",
                 selectedGame.gameName()
@@ -461,6 +463,7 @@ public class ChessClient {
         else{
             return """
                     - help
+                    - redrawchessboard
                     - leave
                     - quit
                     """;
