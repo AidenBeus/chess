@@ -474,7 +474,10 @@ public class ChessClient {
     }
 
     public String leaveGame() throws IOException {
-        state = State.SIGNEDIN;
+        if (ws == null || currentGameId == null) {
+            return "You are not currently connected to a game.\n";
+        }
+
         UserGameCommand leave =
                 new UserGameCommand(
                         UserGameCommand.CommandType.LEAVE,
@@ -482,8 +485,15 @@ public class ChessClient {
                         currentGameId);
 
         ws.sendCommand(gson.toJson(leave));
+        ws.close();
+        ws = null;
+        currentGameId = null;
+        currentGameState = new ChessGame();
+        state = State.SIGNEDIN;
+
         return "You have left the game";
     }
+
     public String help() {
         if (state == State.SIGNEDOUT) {
             return """

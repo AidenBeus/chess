@@ -68,9 +68,20 @@ public class ConnectionManager {
         try {
             AuthData auth = service.getAuth(command.getAuthToken());
             GameData gameData = service.getGame(command.getGameID());
-
             if (auth == null || gameData == null) {
                 sendError(rootSession, "Error: invalid auth token or game id");
+                return;
+            }
+            if (gameData.game().isInCheckmate(ChessGame.TeamColor.WHITE)){
+                sendError(rootSession, "Game is over. White is checkmated");
+                return;
+            }
+            if (gameData.game().isInCheckmate(ChessGame.TeamColor.BLACK)){
+                sendError(rootSession, "Game is over. Black is checkmated");
+                return;
+            }
+            if (gameData.game().isInStalemate(ChessGame.TeamColor.WHITE) || gameData.game().isInStalemate(ChessGame.TeamColor.BLACK)){
+                sendError(rootSession, "Game is over because of a stalemate");
                 return;
             }
 
@@ -173,7 +184,67 @@ public class ConnectionManager {
     }
 
     public void leave(Session session, UserGameCommand command) {
-        // implement later
+        try {
+            AuthData auth = service.getAuth(command.getAuthToken());
+            GameData gameData = service.getGame(command.getGameID());
+
+            if (auth == null || gameData == null) {
+                sendError(session, "Error: invalid auth token or game id");
+                return;
+            }
+
+            Connection connection = findConnection(command.getGameID(), auth.username());
+            if (connection == null) {
+                sendError(session, "Error: not connected to this game");
+                return;
+            }
+
+            String username = auth.username();
+            boolean changed = false;
+
+            GameData updatedGame = new GameData(
+                    gameData.gameID(),
+                    gameData.whiteUsername(),
+                    gameData.blackUsername(),
+                    gameData.gameName(),
+                    gameData.game()
+            );
+
+            if (username.equals(gameData.whiteUsername())) {
+                updatedGame = new GameData(
+                        gameData.gameID(),
+                        null,
+                        gameData.blackUsername(),
+                        gameData.gameName(),
+                        gameData.game()
+                );
+                changed = true;
+            } else if (username.equals(gameData.blackUsername())) {
+                updatedGame = new GameData(
+                        gameData.gameID(),
+                        gameData.whiteUsername(),
+                        null,
+                        gameData.gameName(),
+                        gameData.game()
+                );
+                changed = true;
+            }
+
+            if (changed) {
+                service.updateGame(updatedGame);
+            }
+
+            removeConnection(command.getGameID(), username);
+
+            broadcastExcept(
+                    command.getGameID(),
+                    username + " left the game",
+                    connection
+            );
+
+        } catch (Exception e) {
+            sendError(session, "Error: " + e);
+        }
     }
 
     public void resign(Session session, UserGameCommand command) {
@@ -277,6 +348,13 @@ public class ConnectionManager {
         return "" + file + pos.getRow();
     }
 
+    private void removeConnection(Integer gameId, String username) {
+        Set<Connection> set = connectionsByGame.get(gameId);
+        if (set == null) {
+            return;
+        }
+        set.removeIf(c -> c.username().equals(username));
+    }
     private record Connection(
             Session session,
             int gameId,
