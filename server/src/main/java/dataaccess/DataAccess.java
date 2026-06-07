@@ -17,4 +17,5 @@ public interface DataAccess {
     void joinGame(String playerColor, String username, int gameId) throws DataAccessException, AlreadyTakenException;
     GameData getGame(int gameId) throws DataAccessException;
     void clear() throws DataAccessException;
+    void updateGame(GameData game) throws DataAccessException;
 }

@@ -95,4 +95,7 @@ public class ChessService {
     public GameData getGame(int gameId) throws DataAccessException {
         return dataAccess.getGame(gameId);
     }
+    public void updateGame(GameData game) throws DataAccessException {
+        dataAccess.updateGame(game);
+    }
 }

@@ -73,4 +73,8 @@ public class MemoryDataAccess implements DataAccess{
         authTokens.clear();
         nextId = 1;
     }
+
+    public void updateGame(GameData game) {
+        games.put(game.gameID(), game);
+    }
 }

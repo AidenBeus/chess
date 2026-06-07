@@ -6,6 +6,7 @@ import io.javalin.*;
 import io.javalin.http.Context;
 import model.*;
 import org.mindrot.jbcrypt.BCrypt;
+import server.websocket.WebSocketHandler;
 import service.ChessService;
 
 import java.util.Map;
@@ -14,9 +15,12 @@ public class Server {
 
     private final Javalin javalin;
     private final ChessService service;
+    private final WebSocketHandler webSocketHandler;
 
     public Server() {
         service = new ChessService(new MySqlDataAccess());
+        webSocketHandler = new WebSocketHandler(service);
+
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
                 .post("/user", this::register)
                 .post("/session", this::login)

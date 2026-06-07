@@ -1,13 +1,14 @@
 package server.websocket;
 
 import com.google.gson.Gson;
-import dataaccess.DataAccessException;
 import io.javalin.websocket.WsCloseContext;
+import io.javalin.websocket.WsConnectContext;
+import io.javalin.websocket.WsErrorContext;
 import io.javalin.websocket.WsMessageContext;
 import service.ChessService;
+import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
-
-import java.io.IOException;
+import websocket.messages.ErrorMessage;
 
 public class WebSocketHandler {
     private final Gson gson = new Gson();
@@ -17,24 +18,42 @@ public class WebSocketHandler {
         this.connections = new ConnectionManager(service);
     }
 
-    public void onMessage(WsMessageContext ctx) throws DataAccessException {
-        UserGameCommand command = gson.fromJson(ctx.message(), UserGameCommand.class);
+    public void onConnect(WsConnectContext ctx) {
+    }
 
-        switch (command.getCommandType()) {
-            case CONNECT ->
-                    connections.connect(
-                            command.getAuthToken(),
-                            command.getGameID(),
-                            ctx::send
-                    );
+    public void onMessage(WsMessageContext ctx) {
+        try {
+            UserGameCommand base = gson.fromJson(ctx.message(), UserGameCommand.class);
 
-            case MAKE_MOVE -> connections.makeMove(ctx.session, command);
-            case LEAVE -> connections.leave(ctx.session, command);
-            case RESIGN -> connections.resign(ctx.session, command);
+            switch (base.getCommandType()) {
+                case CONNECT -> connections.connect(
+                        base.getAuthToken(),
+                        base.getGameID(),
+                        ctx::send
+                );
+
+                case MAKE_MOVE -> {
+                    MakeMoveCommand moveCommand = gson.fromJson(ctx.message(), MakeMoveCommand.class);
+                    connections.makeMove(moveCommand, ctx::send);
+                }
+
+                case LEAVE -> connections.leave(ctx.session, base);
+                case RESIGN -> connections.resign(ctx.session, base);
+            }
+        } catch (Exception e) {
+            try {
+                ctx.send(gson.toJson(new ErrorMessage("Error: " + e.getMessage())));
+            } catch (Exception ignored) {
+            }
         }
     }
 
     public void onClose(WsCloseContext ctx) {
         connections.cleanup(ctx.session);
+    }
+    public void onError(WsErrorContext ctx) {
+        if (ctx.error() != null) {
+            ctx.error().printStackTrace();
+        }
     }
 }
