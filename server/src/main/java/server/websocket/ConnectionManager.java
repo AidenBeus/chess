@@ -128,6 +128,8 @@ public class ConnectionManager {
             );
 
             service.updateGame(updatedGame);
+            GameData verify = service.getGame(gameData.gameID());
+            System.out.println("VERIFY AFTER UPDATE: " + verify.game());
 
             broadcastGame(gameData.gameID(), game);
 

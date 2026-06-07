@@ -145,7 +145,12 @@ public class ChessClient {
 
             ChessPiece piece = game.getBoard().getPiece(start);
 
-            if(!game.getTeamTurn().toString().equalsIgnoreCase(color)){
+            ChessGame.TeamColor playerColor =
+                    color.equalsIgnoreCase("WHITE")
+                            ? ChessGame.TeamColor.WHITE
+                            : ChessGame.TeamColor.BLACK;
+
+            if (game.getTeamTurn() != playerColor) {
                 return "It is not your turn\n";
             }
 
@@ -180,8 +185,6 @@ public class ChessClient {
 
             ws.sendCommand(gson.toJson(command));
 
-            currentGameState.makeMove(move);
-            drawBoard(color);
             return "Move sent to server.\n";
 
         } catch (Exception e) {
