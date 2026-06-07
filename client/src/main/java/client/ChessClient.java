@@ -17,6 +17,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 
 import static ui.EscapeSequences.*;
@@ -30,8 +31,7 @@ public class ChessClient {
     private Integer currentGameId;
     private WebSocketFacade ws;
     private final Gson gson = new Gson();
-    private ChessGame currentGameState = new ChessGame();
-
+    private volatile ChessGame currentGameState = new ChessGame();
     public ChessClient(String serverUrl) {
         server = new ServerFacade(serverUrl);
     }
@@ -145,6 +145,10 @@ public class ChessClient {
 
             ChessPiece piece = game.getBoard().getPiece(start);
 
+            if(!game.getTeamTurn().toString().equalsIgnoreCase(color)){
+                return "It is not your turn\n";
+            }
+
             if (piece == null) {
                 return "No piece at that square.\n";
             }
@@ -176,6 +180,8 @@ public class ChessClient {
 
             ws.sendCommand(gson.toJson(command));
 
+            currentGameState.makeMove(move);
+            drawBoard(color);
             return "Move sent to server.\n";
 
         } catch (Exception e) {
