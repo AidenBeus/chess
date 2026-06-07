@@ -10,6 +10,8 @@ import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 import websocket.messages.ErrorMessage;
 
+import java.time.Duration;
+
 public class WebSocketHandler {
     private final Gson gson = new Gson();
     private final ConnectionManager connections;
@@ -19,6 +21,7 @@ public class WebSocketHandler {
     }
 
     public void onConnect(WsConnectContext ctx) {
+        ctx.session.setIdleTimeout(Duration.ofHours(1));
     }
 
     public void onMessage(WsMessageContext ctx) {

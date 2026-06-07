@@ -52,8 +52,15 @@ public class ConnectionManager {
     }
 
     public void cleanup(Session session) {
-        for (Set<Connection> connections : connectionsByGame.values()) {
-            connections.removeIf(c -> c.session().equals(session));
+        System.out.println("cleanup called for session: " + session);
+        for (Map.Entry<Integer, Set<Connection>> entry : connectionsByGame.entrySet()) {
+            Integer gameId = entry.getKey();
+            Set<Connection> connections = entry.getValue();
+
+            boolean removed = connections.removeIf(c -> c.session().equals(session));
+            if (removed) {
+                System.out.println("Removed session from game " + gameId);
+            }
         }
     }
 
@@ -210,6 +217,8 @@ public class ConnectionManager {
             try {
                 c.session().getRemote().sendString(json);
             } catch (Exception e) {
+                System.out.println("broadcastGame failed for " + c.username());
+                e.printStackTrace();
                 dead.add(c);
             }
         }
@@ -228,6 +237,8 @@ public class ConnectionManager {
             try {
                 c.session().getRemote().sendString(json);
             } catch (Exception e) {
+                System.out.println("broadcastAll failed for " + c.username());
+                e.printStackTrace();
                 dead.add(c);
             }
         }
@@ -249,6 +260,8 @@ public class ConnectionManager {
             try {
                 c.session().getRemote().sendString(json);
             } catch (Exception e) {
+                System.out.println("broadcastExcept failed for " + c.username());
+                e.printStackTrace();
                 dead.add(c);
             }
         }
