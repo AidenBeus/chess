@@ -9,6 +9,7 @@ import model.UserData;
 import org.glassfish.tyrus.client.ClientManager;
 import ui.ServerFacade;
 import ui.WebSocketFacade;
+import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 
 import java.io.IOException;
@@ -119,8 +120,8 @@ public class ChessClient {
                 return "Input must be in format like a1";
             }
             ChessPosition start = getPosition(input);
-            if (start.getRow() < 1 || start.getRow() > 8 || start.getColumn() == 999) {
-                return "Invalid position";
+            if (start.getRow() < 1 || start.getRow() > 8 || start.getColumn() == -999) {
+                return "Input must be in format like a1";
             }
 
             System.out.print("Move piece to: ");
@@ -129,16 +130,16 @@ public class ChessClient {
                 return "Input must be in format like a1";
             }
             ChessPosition end = getPosition(input);
-            if (end.getRow() < 1 || end.getRow() > 8 || end.getColumn() == 999) {
+            if (end.getRow() < 1 || end.getRow() > 8 || end.getColumn() == -999) {
                 return "Invalid position";
             }
             ChessMove move = new ChessMove(start, end, null);
-            UserGameCommand command = new UserGameCommand(
-                    UserGameCommand.CommandType.MAKE_MOVE,
-                    authToken,
-                    currentGameId,
-                    move
-            );
+            MakeMoveCommand command =
+                    new MakeMoveCommand(
+                            authToken,
+                            currentGameId,
+                            move
+                    );
             ws.sendCommand(gson.toJson(command));
             return "Move submitted";
         } catch(Exception e){
@@ -159,7 +160,7 @@ public class ChessClient {
             case "f" -> col = 6;
             case "g" -> col = 7;
             case "h" -> col = 8;
-            default -> col = 999;
+            default -> col = -999;
         }
         return new ChessPosition(row, col);
     }
