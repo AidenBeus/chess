@@ -1,20 +1,18 @@
 package client;
 
-import chess.ResponseException;
+import chess.*;
+import com.google.gson.Gson;
 import model.GameData;
 import model.UserData;
 import ui.ServerFacade;
+import websocket.commands.UserGameCommand;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
 import static ui.EscapeSequences.*;
-import chess.ChessBoard;
-import chess.ChessGame;
-import chess.ChessPiece;
-import chess.ChessPosition;
 
 public class ChessClient {
     private final ServerFacade server;
@@ -22,6 +20,9 @@ public class ChessClient {
     private String authToken;
     private final List<GameData> listedGames = new ArrayList<>();
     private String color = "WHITE";
+    private Integer currentGameId;
+    private WebSocketFacade ws;
+    private final Gson gson = new Gson();
 
     public ChessClient(String serverUrl) {
         server = new ServerFacade(serverUrl);
@@ -76,7 +77,7 @@ public class ChessClient {
                 return switch (cmd) {
                     case "leave" -> leaveGame();
                     case "redrawchessboard" -> redraw();
-//                    case "makemove" -> makeMove();
+                    case "makemove" -> makeMove();
 //                    case "resign" -> resign();
 //                    case "highlightlegalmoves" -> highlightLegalMoves();
                     case "quit" -> "quit";
@@ -92,7 +93,67 @@ public class ChessClient {
             }
         } catch (ResponseException ex) {
             return ex.getMessage();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+    }
+
+    private String makeMove() throws IOException {
+        if (ws == null || currentGameId == null){
+            return "You are not currently connected to a game.\n";
+        }
+        Scanner scanner = new Scanner(System.in);
+
+        try {
+            System.out.print("Piece location: ");
+            String input = scanner.nextLine().trim();
+            if (input.length() !=2){
+                return "Input must be in format like a1";
+            }
+            ChessPosition start = getPosition(input);
+            if (start.getRow() < 1 || start.getRow() > 8 || start.getColumn() == 999) {
+                return "Invalid position";
+            }
+
+            System.out.print("Move piece to: ");
+            input = scanner.nextLine().trim();
+            if (input.length() !=2){
+                return "Input must be in format like a1";
+            }
+            ChessPosition end = getPosition(input);
+            if (end.getRow() < 1 || end.getRow() > 8 || end.getColumn() == 999) {
+                return "Invalid position";
+            }
+            ChessMove move = new ChessMove(start, end, null);
+            UserGameCommand command = new UserGameCommand(
+                    UserGameCommand.CommandType.MAKE_MOVE,
+                    authToken,
+                    currentGameId,
+                    move
+            );
+            ws.sendCommand(gson.toJson(command));
+            return "Move submitted";
+        } catch(Exception e){
+            return "Error: " + e.getMessage();
+        }
+    }
+
+    private ChessPosition getPosition(String input) {
+        String letter = String.valueOf(input.charAt(0)).toLowerCase();
+        int row = Character.getNumericValue(input.charAt(1));
+        int col;
+        switch (letter){
+            case "a" -> col = 1;
+            case "b" -> col = 2;
+            case "c" -> col = 3;
+            case "d" -> col = 4;
+            case "e" -> col = 5;
+            case "f" -> col = 6;
+            case "g" -> col = 7;
+            case "h" -> col = 8;
+            default -> col = 999;
+        }
+        return new ChessPosition(row, col);
     }
 
     private String redraw() {
@@ -225,6 +286,7 @@ public class ChessClient {
         state = State.INGAME;
         drawBoard(color);
 
+        currentGameId = selectedGame.gameID();
         return String.format(
                 "Joined game '%s' as %s.\n",
                 selectedGame.gameName(),
