@@ -25,7 +25,13 @@ public class Server {
                 .post("/game", this::createGame)
                 .put("/game", this::joinGame)
                 .delete("/db", this::clear)
-        ;
+                .ws("/ws", ws -> {
+                    ws.onConnect(webSocketHandler::onConnect);
+                    ws.onMessage(webSocketHandler::onMessage);
+                    ws.onClose(webSocketHandler::onClose);
+                    ws.onError(webSocketHandler::onError);
+                });
+
         // Register your endpoints and exception handlers here.
 
     }

@@ -293,12 +293,8 @@ public class ChessClient {
 
         server.joinGame(authToken, color, selectedGame.gameID());
         connectWebSocket();
-        UserGameCommand connect = new UserGameCommand(
-                UserGameCommand.CommandType.CONNECT,
-                authToken,
-                currentGameId
-        );
-        ws.sendCommand(gson.toJson(connect));
+        sendConnectCommand();
+        System.out.println("Connected websocket");
         state = State.INGAME;
         drawBoard(color);
         return String.format(
@@ -332,17 +328,12 @@ public class ChessClient {
         }
 
         GameData selectedGame = listedGames.get(gameNumber - 1);
+        currentGameId = selectedGame.gameID();
         state = State.OBSERVE;
         color = "WHITE";
         connectWebSocket();
-        UserGameCommand connect = new UserGameCommand(
-                UserGameCommand.CommandType.CONNECT,
-                authToken,
-                currentGameId
-        );
-        ws.sendCommand(gson.toJson(connect));
+        sendConnectCommand();
         drawBoard(color);
-        currentGameId = selectedGame.gameID();
         return String.format(
                 "Observing game '%s'.\n",
                 selectedGame.gameName()
@@ -440,8 +431,15 @@ public class ChessClient {
         }
     }
 
-    public String leaveGame(){
+    public String leaveGame() throws IOException {
         state = State.SIGNEDIN;
+        UserGameCommand leave =
+                new UserGameCommand(
+                        UserGameCommand.CommandType.LEAVE,
+                        authToken,
+                        currentGameId);
+
+        ws.sendCommand(gson.toJson(leave));
         return "You have left the game";
     }
     public String help() {
