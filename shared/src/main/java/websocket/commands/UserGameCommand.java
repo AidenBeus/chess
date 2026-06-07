@@ -20,14 +20,26 @@ public class UserGameCommand {
 
     private final ChessMove move;
 
-    public UserGameCommand(CommandType commandType, String authToken, Integer gameID, ChessMove move) {
+    public UserGameCommand(CommandType commandType, String authToken, Integer gameID) {
+        this.commandType = commandType;
+        this.authToken = authToken;
+        this.gameID = gameID;
+        this.move = null;
+    }
+    public ChessMove getMove() {
+        return move;
+    }
+
+    public UserGameCommand(
+            CommandType commandType,
+            String authToken,
+            Integer gameID,
+            ChessMove move) {
+
         this.commandType = commandType;
         this.authToken = authToken;
         this.gameID = gameID;
         this.move = move;
-    }
-    public ChessMove getMove() {
-        return move;
     }
 
     public enum CommandType {

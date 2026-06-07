@@ -28,6 +28,7 @@ public class ChessClient {
     private Integer currentGameId;
     private WebSocketFacade ws;
     private final Gson gson = new Gson();
+    private ChessGame currentGameState = new ChessGame();
 
     public ChessClient(String serverUrl) {
         server = new ServerFacade(serverUrl);
@@ -99,7 +100,7 @@ public class ChessClient {
             }
         } catch (ResponseException ex) {
             return ex.getMessage();
-        } catch (IOException e) {
+        } catch (IOException | URISyntaxException | DeploymentException e) {
             throw new RuntimeException(e);
         }
     }
@@ -254,7 +255,7 @@ public class ChessClient {
         return result.toString();
     }
 
-    private String playGame() throws ResponseException {
+    private String playGame() throws ResponseException, DeploymentException, IOException, URISyntaxException {
         if (listedGames.isEmpty()) {
             return "Use the command listgames to populate the list and/or create a game\n";
         }
@@ -286,13 +287,18 @@ public class ChessClient {
         }
 
         GameData selectedGame = listedGames.get(gameNumber - 1);
+        currentGameId = selectedGame.gameID();
 
         server.joinGame(authToken, color, selectedGame.gameID());
-
+        connectWebSocket();
+        UserGameCommand connect = new UserGameCommand(
+                UserGameCommand.CommandType.CONNECT,
+                authToken,
+                currentGameId
+        );
+        ws.sendCommand(gson.toJson(connect));
         state = State.INGAME;
         drawBoard(color);
-
-        currentGameId = selectedGame.gameID();
         return String.format(
                 "Joined game '%s' as %s.\n",
                 selectedGame.gameName(),
@@ -300,7 +306,7 @@ public class ChessClient {
         );
     }
 
-    private String observeGame() {
+    private String observeGame() throws DeploymentException, IOException, URISyntaxException {
         if (listedGames.isEmpty()) {
             return "Use the command listgames to populate the list and/or create a game\n";
         }
@@ -326,6 +332,13 @@ public class ChessClient {
         GameData selectedGame = listedGames.get(gameNumber - 1);
         state = State.OBSERVE;
         color = "WHITE";
+        connectWebSocket();
+        UserGameCommand connect = new UserGameCommand(
+                UserGameCommand.CommandType.CONNECT,
+                authToken,
+                currentGameId
+        );
+        ws.sendCommand(gson.toJson(connect));
         drawBoard(color);
         currentGameId = selectedGame.gameID();
         return String.format(
@@ -335,8 +348,7 @@ public class ChessClient {
     }
 
     private void drawBoard(String color) {
-        ChessGame game = new ChessGame();
-        ChessBoard board = game.getBoard();
+        ChessBoard board = currentGameState.getBoard();
 
         boolean whitePerspective = color.equalsIgnoreCase("WHITE");
 
@@ -471,12 +483,32 @@ public class ChessClient {
     }
     private void connectWebSocket() throws IOException, DeploymentException, URISyntaxException {
         ClientManager client = ClientManager.createClient();
-        ws = new WebSocketFacade();
+        ws = new WebSocketFacade(this);
 
         client.connectToServer(
                 ws,
                 ClientEndpointConfig.Builder.create().build(),
                 URI.create("ws://localhost:8080/ws")
         );
+    }
+    private void sendConnectCommand() throws IOException {
+        UserGameCommand command = new UserGameCommand(
+                UserGameCommand.CommandType.CONNECT,
+                authToken,
+                currentGameId
+        );
+        ws.sendCommand(gson.toJson(command));
+    }
+    public void handleLoadGame(ChessGame game) {
+        currentGameState = game;
+        drawBoard(color);
+    }
+
+    public void handleNotification(String message) {
+        System.out.println(message);
+    }
+
+    public void handleError(String message) {
+        System.out.println("Error: " + message);
     }
 }
