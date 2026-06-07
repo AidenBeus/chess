@@ -184,7 +184,6 @@ public class ChessClient {
                     );
 
             ws.sendCommand(gson.toJson(command));
-
             return "Move sent to server.\n";
 
         } catch (Exception e) {
@@ -341,7 +340,6 @@ public class ChessClient {
         sendConnectCommand();
         System.out.println("Connected websocket");
         state = State.INGAME;
-        drawBoard(color);
         return String.format(
                 "Joined game '%s' as %s.\n",
                 selectedGame.gameName(),
@@ -378,7 +376,6 @@ public class ChessClient {
         color = "WHITE";
         connectWebSocket();
         sendConnectCommand();
-        drawBoard(color);
         return String.format(
                 "Observing game '%s'.\n",
                 selectedGame.gameName()

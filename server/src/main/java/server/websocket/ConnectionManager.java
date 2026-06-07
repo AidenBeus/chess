@@ -114,6 +114,10 @@ public class ConnectionManager {
 
             game.makeMove(move);
 
+            System.out.println("before makeMove");
+            game.makeMove(move);
+            System.out.println("after makeMove");
+
             GameData updatedGame = new GameData(
                     gameData.gameID(),
                     gameData.whiteUsername(),
@@ -122,6 +126,13 @@ public class ConnectionManager {
                     game
             );
 
+            System.out.println("before updateGame");
+            service.updateGame(updatedGame);
+            System.out.println("after updateGame");
+
+            System.out.println("before broadcastGame");
+            broadcastGame(gameData.gameID(), game);
+            System.out.println("after broadcastGame");
             service.updateGame(updatedGame);
 
             broadcastGame(gameData.gameID(), game);
@@ -148,6 +159,7 @@ public class ConnectionManager {
         } catch (Exception e) {
             sendError(rootSession, "Error: " + e.getMessage());
         }
+
     }
 
     public void leave(Session session, UserGameCommand command) {
