@@ -119,11 +119,16 @@ public class ConnectionManager {
                 return;
             }
 
-            game.makeMove(move);
-
             System.out.println("before makeMove");
-            game.makeMove(move);
-            System.out.println("after makeMove");
+            try {
+                game.makeMove(move);
+                System.out.println("after makeMove");
+            } catch (Exception e) {
+                System.out.println("game.makeMove failed");
+                e.printStackTrace();
+                sendError(rootSession, "Error: " + e);
+                return;
+            }
 
             GameData updatedGame = new GameData(
                     gameData.gameID(),
@@ -140,9 +145,6 @@ public class ConnectionManager {
             System.out.println("before broadcastGame");
             broadcastGame(gameData.gameID(), game);
             System.out.println("after broadcastGame");
-            service.updateGame(updatedGame);
-
-            broadcastGame(gameData.gameID(), game);
 
             String moveText = auth.username() + " moved from "
                     + squareName(move.getStartPosition()) + " to "
@@ -164,9 +166,10 @@ public class ConnectionManager {
             }
 
         } catch (Exception e) {
-            sendError(rootSession, "Error: " + e.getMessage());
+            System.out.println("MAKE MOVE FAILED");
+            e.printStackTrace();
+            sendError(rootSession, "Error: " + e);
         }
-
     }
 
     public void leave(Session session, UserGameCommand command) {

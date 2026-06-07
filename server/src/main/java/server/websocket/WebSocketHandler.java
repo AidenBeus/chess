@@ -21,7 +21,8 @@ public class WebSocketHandler {
     }
 
     public void onConnect(WsConnectContext ctx) {
-        ctx.session.setIdleTimeout(Duration.ofHours(1));
+        ctx.session.setIdleTimeout(Duration.ZERO);
+        System.out.println("WebSocket connected: " + ctx.session);
     }
 
     public void onMessage(WsMessageContext ctx) {
@@ -52,6 +53,7 @@ public class WebSocketHandler {
     }
 
     public void onClose(WsCloseContext ctx) {
+        System.out.println("WebSocket closed: " + ctx.session);
         connections.cleanup(ctx.session);
     }
     public void onError(WsErrorContext ctx) {

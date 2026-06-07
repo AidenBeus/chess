@@ -542,10 +542,6 @@ public class ChessClient {
         ws.sendCommand(gson.toJson(command));
     }
     public void handleLoadGame(ChessGame game) {
-        System.out.println("Turn: " + game.getTeamTurn());
-        System.out.println("e2 piece: " +
-                game.getBoard().getPiece(new ChessPosition(2,5)));
-
         currentGameState = game;
         drawBoard(color);
     }

@@ -29,8 +29,6 @@ public class WebSocketFacade extends Endpoint {
 
     private void handleMessage(String message) {
         try {
-            System.out.println("WS RECEIVED: " + message);
-
             ServerMessage base = gson.fromJson(message, ServerMessage.class);
             if (base == null || base.getServerMessageType() == null) {
                 System.out.println("Unknown websocket message: " + message);
