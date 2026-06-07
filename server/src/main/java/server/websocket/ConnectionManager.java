@@ -23,7 +23,6 @@ public class ConnectionManager {
     private final Gson gson = new Gson();
 
     private final Map<Integer, Set<Connection>> connectionsByGame = new HashMap<>();
-    private final Set<Integer> resignedGames = new HashSet<>();
 
     public ConnectionManager(ChessService service) {
         this.service = service;
@@ -280,7 +279,6 @@ public class ConnectionManager {
                     true
             );
             service.updateGame(updatedGame);
-            resignedGames.add(command.getGameID());
             broadcastAll(command.getGameID(), auth.username() + " resigned the game");
 
         } catch (Exception e) {
@@ -393,13 +391,6 @@ public class ConnectionManager {
         set.removeIf(c -> c.username().equals(username));
     }
 
-    private boolean isGameResigned(Integer gameId) {
-        return resignedGames.contains(gameId);
-    }
-
-    private boolean gameIsOver(int gameId) {
-        return resignedGames.contains(gameId);
-    }
 
     private record Connection(
             Session session,

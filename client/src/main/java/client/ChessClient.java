@@ -15,10 +15,7 @@ import websocket.commands.UserGameCommand;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.*;
 
 import static ui.EscapeSequences.*;
 
@@ -87,7 +84,7 @@ public class ChessClient {
                     case "redrawchessboard" -> redraw();
                     case "makemove" -> makeMove();
                     case "resign" -> resign();
-//                    case "highlightlegalmoves" -> highlightLegalMoves();
+                    case "highlightlegalmoves" -> highlightLegalMoves();
                     case "quit" -> "quit";
                     default -> "valid commands\n" + help();
                 };
@@ -95,6 +92,7 @@ public class ChessClient {
             else{
                 return switch (cmd){  //This is the observe state
                     case "redrawchessboard" -> redraw();
+                    case "highlightlegalmoves" -> highlightLegalMoves();
                     case "leave" -> leaveGame();
                     case "quit" -> "quit";
                     default -> "valid commands\n" + help();
@@ -105,6 +103,53 @@ public class ChessClient {
         } catch (IOException | URISyntaxException | DeploymentException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String highlightLegalMoves() {
+        if (currentGameState == null) {
+            return "No game loaded.\n";
+        }
+
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Highlight legal moves for piece at: ");
+        String input = scanner.nextLine().trim();
+
+        if (input.length() != 2) {
+            return "Input must be in format like a1\n";
+        }
+
+        ChessPosition start = getPosition(input);
+        if (start.getRow() < 1 || start.getRow() > 8 || start.getColumn() == -999) {
+            return "Invalid position\n";
+        }
+
+        ChessPiece piece = currentGameState.getBoard().getPiece(start);
+        if (piece == null) {
+            return "No piece at that square.\n";
+        }
+
+        if (state == State.INGAME) {
+            ChessGame.TeamColor playerColor =
+                    color.equalsIgnoreCase("WHITE")
+                            ? ChessGame.TeamColor.WHITE
+                            : ChessGame.TeamColor.BLACK;
+
+            if (piece.getTeamColor() != playerColor) {
+                return "Not your piece.\n";
+            }
+        }
+
+        Set<ChessPosition> highlights = new HashSet<>();
+        var legalMoves = currentGameState.validMoves(start);
+        if (legalMoves != null) {
+            for (ChessMove move : legalMoves) {
+                highlights.add(move.getEndPosition());
+            }
+        }
+
+        drawBoard(color, highlights);
+        return "Highlighted legal moves.\n";
     }
 
     private String resign() throws IOException {
@@ -398,6 +443,10 @@ public class ChessClient {
     }
 
     private void drawBoard(String color) {
+        drawBoard(color, Set.of());
+    }
+
+    private void drawBoard(String color, Set<ChessPosition> highlights) {
         ChessBoard board = currentGameState.getBoard();
 
         boolean whitePerspective = color.equalsIgnoreCase("WHITE");
@@ -419,11 +468,18 @@ public class ChessClient {
 
             for (String columnName : columns) {
                 int col = columnName.charAt(0) - 'a' + 1;
+                ChessPosition pos = new ChessPosition(row, col);
 
                 boolean lightSquare = (row + col) % 2 != 0;
-                System.out.print(lightSquare ? SET_BG_COLOR_LIGHT_GREY : SET_BG_COLOR_BLACK);
+                boolean highlighted = highlights.contains(pos);
 
-                ChessPiece piece = board.getPiece(new ChessPosition(row, col));
+                if (highlighted) {
+                    System.out.print(SET_BG_COLOR_GREEN);
+                } else {
+                    System.out.print(lightSquare ? SET_BG_COLOR_LIGHT_GREY : SET_BG_COLOR_BLACK);
+                }
+
+                ChessPiece piece = board.getPiece(pos);
                 System.out.print(pieceToString(piece));
             }
 
@@ -543,6 +599,7 @@ public class ChessClient {
             return """
                     - help
                     - redrawchessboard
+                    - highlightlegalmoves
                     - leave
                     - quit
                     """;
