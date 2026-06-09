@@ -152,6 +152,12 @@ public class ChessClient {
                         authToken,
                         currentGameId);
 
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Are you sure you want to resign?(Y/N)");
+        String input = scanner.nextLine().trim().toUpperCase();
+        if (!input.equals("Y")){
+            return "";
+        }
         ws.sendCommand(gson.toJson(resign));
         return "You resigned the game";
     }
@@ -266,12 +272,10 @@ public class ChessClient {
         }
         return new ChessPosition(row, col);
     }
-
     private String redraw() {
         boardRenderer.render(currentGameState, color);
         return "Board Redrawn";
     }
-
 
     public String signIn() {
         Scanner scanner = new Scanner(System.in);
