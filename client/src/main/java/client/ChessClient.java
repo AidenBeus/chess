@@ -371,7 +371,6 @@ public class ChessClient {
         server.joinGame(authToken, color, selectedGame.gameID());
         connectWebSocket();
         sendConnectCommand();
-        System.out.println("Connected websocket");
         state = State.INGAME;
         return String.format(
                 "Joined game '%s' as %s.\n",
