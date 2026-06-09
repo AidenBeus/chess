@@ -30,6 +30,7 @@ public class BoardRenderer {
 
         System.out.print(ERASE_SCREEN);
 
+        System.out.println();
         printColumnLabels(columns);
 
         for (int row : rows) {
